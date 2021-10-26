@@ -1,11 +1,4 @@
-from smoothcrawler.http_io import BaseHTTP, HTTP, AsyncHTTP, set_retry
-from abc import ABCMeta, abstractmethod
-import urllib3
-import pytest
-import http
-import time
-
-# Import package multirunnable
+# # Import package multirunnable
 import pathlib
 import sys
 import os
@@ -14,7 +7,13 @@ package_multirunnable_path = str(pathlib.Path(__file__).absolute().parent.parent
 final_path = os.path.join(package_multirunnable_path, "apache-multirunnable")
 sys.path.append(final_path)
 
-from multirunnable.api import retry
+
+from smoothcrawler.http_io import BaseHTTP, HTTP, AsyncHTTP, set_retry, RetryFunctionComponent
+from abc import ABCMeta, abstractmethod
+import urllib3
+import pytest
+import http
+import time
 
 
 HTTP_METHOD = "GET"
@@ -59,6 +58,8 @@ class _TestMethodsHTTP(HTTP):
     def get(self, *args, **kwargs):
         _http = urllib3.PoolManager()
         self.__Http_Response = _http.request("GET", TEST_URL)
+        print("[DEBUG] New get implementation.")
+        print(f"[DEBUG] Response: {self.__Http_Response}")
         return self.__Http_Response
 
 
@@ -144,26 +145,7 @@ Final_Flag = 0
 Exception_Flag = 0
 
 
-class _TestRetryRequestsHTTP(HTTP):
-
-    __Http_Response = None
-
-    def get(self, *args, **kwargs):
-        _http = urllib3.PoolManager()
-        global Test_Sleep_Time
-        # time.sleep(Test_Sleep_Time)
-        if Test_Sleep_Time >= REQUEST_TIMEOUT:
-            raise TimeoutError("For testing")
-        Test_Sleep_Time -= 1
-        self.__Http_Response = _http.request("GET", TEST_URL)
-        return self.__Http_Response
-
-    @property
-    def status_code(self):
-        if self.__Http_Response:
-            return self.__Http_Response.status
-        else:
-            return 404
+class _MyRetry(RetryFunctionComponent):
 
     def before_request(self, *args, **kwargs):
         global Initial_Flag
@@ -187,6 +169,29 @@ class _TestRetryRequestsHTTP(HTTP):
         print("Got failure when run task.")
         return error
 
+
+
+class _TestRetryRequestsHTTP(HTTP):
+
+    __Http_Response = None
+
+    def get(self, *args, **kwargs):
+        _http = urllib3.PoolManager()
+        global Test_Sleep_Time
+        # time.sleep(Test_Sleep_Time)
+        if Test_Sleep_Time >= REQUEST_TIMEOUT:
+            raise TimeoutError("For testing")
+        Test_Sleep_Time -= 1
+        self.__Http_Response = _http.request("GET", TEST_URL)
+        return self.__Http_Response
+
+    @property
+    def status_code(self):
+        if self.__Http_Response:
+            return self.__Http_Response.status
+        else:
+            return 404
+
     def http_200_response(self, response):
         print("Get the HTTP response successfully.")
 
@@ -208,6 +213,11 @@ class TestRetryHttpGet(BaseHttpTestSpec):
         http_cls = _TestRetryRequestsHTTP()
         # It will raise TimeoutError if it doesn't get response after 5 seconds later.
         # And it will retry to send HTTP request if it got any exception util overrate the retry times.
+        my_retry = _MyRetry()
+        http_cls.before_request = my_retry.before_request
+        http_cls.request_done = my_retry.request_done
+        http_cls.request_final = my_retry.request_final
+        http_cls.request_error = my_retry.request_error
         response = http_cls.request(timeout=REQUEST_TIMEOUT)
         assert response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
         assert http_cls.status_code is not None, "HTTP status code must to be a value."
@@ -215,9 +225,9 @@ class TestRetryHttpGet(BaseHttpTestSpec):
         status_code = int(http_cls.status_code)
         assert TestRetryHttpGet.__status_code_is_valid(status_code) is True, "This is not a valid status code."
 
-        assert Initial_Flag == RETRY_TIMES, ""
-        assert Done_Flag == RETRY_TIMES, ""
-        assert Exception_Flag == RETRY_TIMES, ""
+        assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
+        assert Done_Flag == RETRY_TIMES or Exception_Flag == RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
+        assert Final_Flag == RETRY_TIMES, "Final process times should be equal to retry times."
 
 
     @staticmethod
