@@ -174,7 +174,6 @@ class HTTP(BaseHTTP):
                           *args, **kwargs):
         if re.search(f"get", method, re.IGNORECASE):
             response = self.get(*args, **kwargs)
-            print(f"[DEBUG] response in method '__request_process': {response}")
         elif re.search(f"post", method, re.IGNORECASE):
             response = self.post(*args, **kwargs)
         elif re.search(f"put", method, re.IGNORECASE):
