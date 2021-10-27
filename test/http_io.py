@@ -8,9 +8,10 @@ final_path = os.path.join(package_multirunnable_path, "apache-multirunnable")
 sys.path.append(final_path)
 
 
-from smoothcrawler.http_io import BaseHTTP, HTTP, AsyncHTTP, set_retry, RetryFunctionComponent
+from smoothcrawler.http_io import BaseHTTP, HTTP, AsyncHTTP, set_retry, RetryComponent
 from abc import ABCMeta, abstractmethod
 import urllib3
+import logging
 import pytest
 import http
 import time
@@ -24,22 +25,21 @@ TEST_TIMEOUT_URL = "https://www.test.com"
 RETRY_TIMES = 3
 REQUEST_TIMEOUT = 5
 
-
-class BaseHttpTestSpec(metaclass=ABCMeta):
-
-    @abstractmethod
-    def test_request(self, *args, **kwargs):
-        pass
-
+GET_FLAG = False
+POST_FLAG = False
+PUT_FLAG = False
+DELETE_FLAG = False
+HEAD_FLAG = False
+OPTION_FLAG = False
 
 
 class _TestRequestsHTTP(HTTP):
 
     __Http_Response = None
 
-    def request(self, *args, **kwargs):
+    def request(self, url, method="GET", timeout=-1, retry_components=None, *args, **kwargs):
         _http = urllib3.PoolManager()
-        self.__Http_Response = _http.request(HTTP_METHOD, TEST_URL)
+        self.__Http_Response = _http.request(HTTP_METHOD, url)
         return self.__Http_Response
 
 
@@ -48,48 +48,60 @@ class _TestRequestsHTTP(HTTP):
         if self.__Http_Response:
             return self.__Http_Response.status
         else:
-            return 404
+            return -1
 
 
 
 class _TestMethodsHTTP(HTTP):
     __Http_Response = None
 
-    def get(self, *args, **kwargs):
+    def get(self, url, *args, **kwargs):
+        global GET_FLAG
+        GET_FLAG = True
         _http = urllib3.PoolManager()
-        self.__Http_Response = _http.request("GET", TEST_URL)
-        print("[DEBUG] New get implementation.")
-        print(f"[DEBUG] Response: {self.__Http_Response}")
+        self.__Http_Response = _http.request("GET", url)
+        logging.debug("New get implementation.")
+        logging.debug(f"Response: {self.__Http_Response}")
         return self.__Http_Response
 
 
-    def post(self, *args, **kwargs):
+    def post(self, url, *args, **kwargs):
+        global POST_FLAG
+        POST_FLAG = True
         _http = urllib3.PoolManager()
-        self.__Http_Response = _http.request("POST", TEST_URL)
+        self.__Http_Response = _http.request("POST", url)
         return self.__Http_Response
 
 
-    def put(self, *args, **kwargs):
+    def put(self, url, *args, **kwargs):
+        global PUT_FLAG
+        PUT_FLAG = True
         _http = urllib3.PoolManager()
-        self.__Http_Response = _http.request("PUT", TEST_URL)
+        self.__Http_Response = _http.request("PUT", url)
         return self.__Http_Response
 
 
-    def delete(self, *args, **kwargs):
+    def delete(self, url, *args, **kwargs):
+        global DELETE_FLAG
+        DELETE_FLAG = True
         _http = urllib3.PoolManager()
-        self.__Http_Response = _http.request("DELETE", TEST_URL)
+        self.__Http_Response = _http.request("DELETE", url)
         return self.__Http_Response
 
 
-    def head(self, *args, **kwargs):
+    def head(self, url, *args, **kwargs):
+        global HEAD_FLAG
+        HEAD_FLAG = True
         _http = urllib3.PoolManager()
-        self.__Http_Response = _http.request("HEAD", TEST_URL)
+        self.__Http_Response = _http.request("HEAD", url)
         return self.__Http_Response
 
 
-    def option(self, *args, **kwargs):
+    def option(self, url, *args, **kwargs):
+        global OPTION_FLAG
+        OPTION_FLAG = True
         _http = urllib3.PoolManager()
-        self.__Http_Response = _http.request("OPTION", TEST_URL)
+        self.__Http_Response = _http.request("OPTION", url)
         return self.__Http_Response
 
 
@@ -98,43 +110,8 @@ class _TestMethodsHTTP(HTTP):
         if self.__Http_Response:
             return self.__Http_Response.status
         else:
-            return 404
-
-
-
-class TestHttpRequest(BaseHttpTestSpec):
-
-    """
-    Test case:
-        Test for sending HTTP request generally.
-    """
-
-    def test_request(self, *args, **kwargs):
-        req_ver_http = _TestRequestsHTTP()
-        req_response = req_ver_http.request()
-        assert req_response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
-        assert req_ver_http.status_code is not None, "HTTP status code must to be a value."
-
-        status_code = int(req_ver_http.status_code)
-        assert TestHttpRequest.__status_code_is_valid(status_code) is True, "This is not a valid status code."
-
-        methods_http = _TestMethodsHTTP()
-        # Test HTTP method 'GET'
-        method_response = methods_http.request(method="GET")
-        assert method_response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
-        assert methods_http.status_code is not None, "HTTP status code must to be a value."
-
-        status_code = int(methods_http.status_code)
-        assert TestHttpRequest.__status_code_is_valid(status_code) is True, "This is not a valid status code."
-
-
-    @staticmethod
-    def __status_code_is_valid(status):
-        for _status in http.HTTPStatus:
-            if int(status) == _status.value:
-                return True
-        else:
-            return False
+            logging.warning(f"There is no HTTP response currently.")
+            return -1
 
 
 Test_Sleep_Time = REQUEST_TIMEOUT + RETRY_TIMES - 1
@@ -145,89 +122,410 @@ Final_Flag = 0
 Exception_Flag = 0
 
 
-class _MyRetry(RetryFunctionComponent):
+class _MyRetry(RetryComponent):
+
+    """
+    A sample code for implementing RetryComponent.
+    """
 
     def before_request(self, *args, **kwargs):
         global Initial_Flag
         Initial_Flag += 1
-        print("Initial process.")
+        logging.info("Initial process.")
 
     def request_done(self, result):
         global Done_Flag
         Done_Flag += 1
-        print("Task done! ")
+        logging.info("Task done! ")
         return result
 
     def request_final(self):
         global Final_Flag
         Final_Flag += 1
-        print("Task done! ")
+        logging.info("Task done! ")
 
     def request_error(self, error):
         global Exception_Flag
         Exception_Flag += 1
-        print("Got failure when run task.")
+        logging.info("Got failure when run task.")
         return error
 
 
 
 class _TestRetryRequestsHTTP(HTTP):
 
+    """
+    A sample code for implementing some features of HTTP.
+    """
+
+    __Fail_Mode = None
     __Http_Response = None
 
-    def get(self, *args, **kwargs):
-        _http = urllib3.PoolManager()
-        global Test_Sleep_Time
-        # time.sleep(Test_Sleep_Time)
-        if Test_Sleep_Time >= REQUEST_TIMEOUT:
-            raise TimeoutError("For testing")
-        Test_Sleep_Time -= 1
-        self.__Http_Response = _http.request("GET", TEST_URL)
-        return self.__Http_Response
+    def __init__(self, fail_mode: bool = False, retry_components: RetryComponent = None):
+        super().__init__(retry_components=retry_components)
+        self.__Fail_Mode = fail_mode
+
+
+    if __Fail_Mode is True:
+        def get(self, url, *args, **kwargs):
+            _http = urllib3.PoolManager()
+            global Test_Sleep_Time
+            # time.sleep(Test_Sleep_Time)
+            if Test_Sleep_Time >= REQUEST_TIMEOUT:
+                raise TimeoutError("For testing")
+            Test_Sleep_Time -= 1
+            self.__Http_Response = _http.request("GET", url)
+            return self.__Http_Response
+    else:
+        def get(self, url, *args, **kwargs):
+            _http = urllib3.PoolManager()
+            self.__Http_Response = _http.request("GET", url)
+            return self.__Http_Response
+
 
     @property
     def status_code(self):
         if self.__Http_Response:
             return self.__Http_Response.status
         else:
-            return 404
+            logging.warning(f"There is no HTTP response currently.")
+            return -1
+
 
     def http_200_response(self, response):
-        print("Get the HTTP response successfully.")
+        logging.info("Get the HTTP response successfully.")
 
 
 
-class TestRetryHttpGet(BaseHttpTestSpec):
-
+class BaseHttpTestSpec(metaclass=ABCMeta):
     """
-    Test case:
-        Test for sending HTTP request with some configuration.
-        Setting:
-            Timeout feature.
-            Retry mechanism.
-            HTTP 200 response handler.
+    Test Description:
+        Testing method 'request' feature, including parameter 'method', 'timeout', 'retry_components'
+
+    Test cases:
+        Parameter 'url':
+            str type:
+            URL type:
+            other type: raise ValueError.
+
+        Parameter 'method':
+            'GET': It should send HTTP request via 'GET' method.
+            'POST': It should send HTTP request via 'POST' method.
+            'PUT': It should send HTTP request via 'PUT' method.
+            'DELETE': It should send HTTP request via 'DELETE' method.
+            'HEAD': It should send HTTP request via 'HEAD' method.
+            'OPTION': It should send HTTP request via 'OPTION' method.
+
+        Note about testing case of 'method':
+            Annotate again, this package DOES NOT case about how developers implement HTTP request (GET, POST, etc).
+            It only cares about the software architecture. That's the reason why we just need to check it work in this package design except feature.
+
+        Parameter 'timeout':
+            -1: It would doesn't timeout and keep waiting for the response util request timeout.
+            <-1: It will raise an ValueError.
+            >=0: It would timeout after the time period.
+
+        Parameter 'retry_components':
+            'before_request': It should be run before it send HTTP request.
+            'request_done': It should be run after it send HTTP request and get the HTTP response.
+            'request_final': It must to run this implementation no matter whether it run successfully or not.
+            'request_error': It would be run if it gets anything exception when it sends HTTP request.
     """
 
-    def test_request(self, *args, **kwargs):
+    @abstractmethod
+    def test_request_url(self, *args, **kwargs):
+        """
+        Test Description:
+        Parameter 'url':
+            str type:
+            URL type:
+            other type: raise ValueError.
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        pass
+
+
+    @abstractmethod
+    def test_request_method(self, *args, **kwargs):
+        """
+        Test Description:
+        Parameter 'method' of bounded function 'test_request_method' of module 'HTTP':
+            'GET': It should send HTTP request via 'GET' method.
+            'POST': It should send HTTP request via 'POST' method.
+            'PUT': It should send HTTP request via 'PUT' method.
+            'DELETE': It should send HTTP request via 'DELETE' method.
+            'HEAD': It should send HTTP request via 'HEAD' method.
+            'OPTION': It should send HTTP request via 'OPTION' method.
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        pass
+
+
+    @abstractmethod
+    def test_request_timeout(self):
+        """
+        Test Description:
+        Parameter 'timeout':
+            -1: It would doesn't timeout and keep waiting for the response util request timeout.
+            <-1: It will raise an ValueError.
+            >=0: It would timeout after the time period.
+        :return:
+        """
+        pass
+
+
+    @abstractmethod
+    def test_request_retry(self):
+        """
+        Test Description:
+        Parameter 'retry_components':
+            'before_request': It should be run before it send HTTP request.
+            'request_done': It should be run after it send HTTP request and get the HTTP response.
+            'request_final': It must to run this implementation no matter whether it run successfully or not.
+            'request_error': It would be run if it gets anything exception when it sends HTTP request.
+        :return:
+        """
+        pass
+
+
+    @abstractmethod
+    def test_get(self):
+        pass
+
+
+    @abstractmethod
+    def test_post(self):
+        pass
+
+
+    @abstractmethod
+    def test_put(self):
+        pass
+
+
+    @abstractmethod
+    def test_delete(self):
+        pass
+
+
+    @abstractmethod
+    def test_head(self):
+        pass
+
+
+    @abstractmethod
+    def test_option(self):
+        pass
+
+
+    @abstractmethod
+    def test_retry_before_request(self):
+        """
+        Test Description:
+            Test for the property of 'before_request'.
+        :return:
+        """
+        pass
+
+
+    @abstractmethod
+    def test_retry_request_done(self):
+        """
+        Test Description:
+            Test for the property of 'request_done'.
+        :return:
+        """
+        pass
+
+
+    @abstractmethod
+    def test_retry_request_final(self):
+        """
+        Test Description:
+            Test for the property of 'request_final'.
+        :return:
+        """
+        pass
+
+
+    @abstractmethod
+    def test_retry_request_error(self):
+        """
+        Test Description:
+            Test for the property of 'request_error'.
+        :return:
+        """
+        pass
+
+
+    @abstractmethod
+    def test_retry_mechanism_with_properties(self):
+        pass
+
+
+
+class TestHttp(BaseHttpTestSpec):
+
+    def test_request_url(self, *args, **kwargs):
+        pass
+
+
+    def test_request_method(self, *args, **kwargs):
+        req_ver_http = _TestRequestsHTTP()
+        req_response = req_ver_http.request(TEST_URL)
+        assert req_response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
+        assert req_ver_http.status_code is not None, "HTTP status code must to be a value."
+
+        status_code = int(req_ver_http.status_code)
+        assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
+
+        methods_http = _TestMethodsHTTP()
+        # Test HTTP method 'GET'
+        method_response = methods_http.request(url=TEST_URL, method="GET")
+        assert method_response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
+        assert methods_http.status_code is not None, "HTTP status code must to be a value."
+
+        status_code = int(methods_http.status_code)
+        assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
+
+
+    def test_request_timeout(self):
+        pass
+
+
+    def test_request_retry(self):
+        pass
+
+
+    def test_get(self):
+        _http_cls = _TestRetryRequestsHTTP()
+        response = _http_cls.request(method="GET", url=TEST_URL)
+
+
+    def test_post(self):
+        _http_cls = _TestRetryRequestsHTTP()
+        response = _http_cls.request(method="POST", url=TEST_URL)
+
+
+    def test_put(self):
+        _http_cls = _TestRetryRequestsHTTP()
+        response = _http_cls.request(method="PUT", url=TEST_URL)
+
+
+    def test_delete(self):
+        _http_cls = _TestRetryRequestsHTTP()
+        response = _http_cls.request(method="DELETE", url=TEST_URL)
+
+
+    def test_head(self):
+        _http_cls = _TestRetryRequestsHTTP()
+        response = _http_cls.request(method="HEAD", url=TEST_URL)
+
+
+    def test_option(self):
+        _http_cls = _TestRetryRequestsHTTP()
+        response = _http_cls.request(method="OPTION", url=TEST_URL)
+
+
+    def test_retry_before_request(self):
+        pass
+
+
+    def test_retry_request_done(self):
+        pass
+
+
+    def test_retry_request_final(self):
+        pass
+
+
+    def test_retry_request_error(self):
+        pass
+
+
+    def test_retry_mechanism_with_properties(self):
         set_retry(RETRY_TIMES)
-        http_cls = _TestRetryRequestsHTTP()
-        # It will raise TimeoutError if it doesn't get response after 5 seconds later.
-        # And it will retry to send HTTP request if it got any exception util overrate the retry times.
-        my_retry = _MyRetry()
-        http_cls.before_request = my_retry.before_request
-        http_cls.request_done = my_retry.request_done
-        http_cls.request_final = my_retry.request_final
-        http_cls.request_error = my_retry.request_error
-        response = http_cls.request(timeout=REQUEST_TIMEOUT)
+        for test_mode in [True, False]:
+            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
+            # It will raise TimeoutError if it doesn't get response after 5 seconds later.
+            # And it will retry to send HTTP request if it got any exception util overrate the retry times.
+            my_retry = _MyRetry()
+            http_cls.before_request = my_retry.before_request
+            http_cls.request_done = my_retry.request_done
+            http_cls.request_final = my_retry.request_final
+            http_cls.request_error = my_retry.request_error
+
+            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
+            TestHttp.__request_checking(test_mode, http_cls, response)
+            # assert response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
+            # assert http_cls.status_code is not None, "HTTP status code must to be a value."
+            #
+            # status_code = int(http_cls.status_code)
+            # assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
+            #
+            # assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
+            # assert Done_Flag == RETRY_TIMES or Exception_Flag == RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
+            # assert Final_Flag == RETRY_TIMES, "Final process times should be equal to retry times."
+
+
+    def test_retry_mechanism_with_adapter(self):
+        set_retry(RETRY_TIMES)
+        for test_mode in [True, False]:
+            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode, retry_components=_MyRetry())
+            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
+            TestHttp.__request_checking(test_mode, http_cls, response)
+            # assert response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
+            # assert http_cls.status_code is not None, "HTTP status code must to be a value."
+            #
+            # status_code = int(http_cls.status_code)
+            # assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
+            #
+            # assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
+            # assert Done_Flag == RETRY_TIMES or Exception_Flag == RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
+            # assert Final_Flag == RETRY_TIMES, "Final process times should be equal to retry times."
+
+
+    @staticmethod
+    def __request_checking(fail_mode, http_cls, response):
         assert response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
         assert http_cls.status_code is not None, "HTTP status code must to be a value."
 
         status_code = int(http_cls.status_code)
-        assert TestRetryHttpGet.__status_code_is_valid(status_code) is True, "This is not a valid status code."
+        assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
 
-        assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
-        assert Done_Flag == RETRY_TIMES or Exception_Flag == RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
-        assert Final_Flag == RETRY_TIMES, "Final process times should be equal to retry times."
+        if fail_mode is True:
+            assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
+            assert Done_Flag == RETRY_TIMES or Exception_Flag == RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
+            assert Final_Flag == RETRY_TIMES, "Final process times should be equal to retry times."
+        else:
+            assert Initial_Flag <= RETRY_TIMES, "Initial process times should be equal to retry times."
+            assert Done_Flag <= RETRY_TIMES and \
+                   Exception_Flag <= RETRY_TIMES and \
+                   (Done_Flag + Exception_Flag) == RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
+            assert Final_Flag <= RETRY_TIMES, "Final process times should be equal to retry times."
+
+
+    def test_request(self, *args, **kwargs):
+        req_ver_http = _TestRequestsHTTP()
+        req_response = req_ver_http.request(url=TEST_URL)
+        assert req_response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
+        assert req_ver_http.status_code is not None, "HTTP status code must to be a value."
+
+        status_code = int(req_ver_http.status_code)
+        assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
+
+        methods_http = _TestMethodsHTTP()
+        # Test HTTP method 'GET'
+        method_response = methods_http.request(method="GET", url=TEST_URL)
+        assert method_response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
+        assert methods_http.status_code is not None, "HTTP status code must to be a value."
+
+        status_code = int(methods_http.status_code)
+        assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
 
 
     @staticmethod
