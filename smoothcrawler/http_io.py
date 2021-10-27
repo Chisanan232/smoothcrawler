@@ -1,7 +1,8 @@
 from multirunnable.api import retry as _retry, async_retry as _async_retry
 
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Optional, Union
+from types import MethodType, FunctionType, CoroutineType
+from typing import Callable, Coroutine, Optional, Union, Type
 import re
 
 
@@ -17,7 +18,30 @@ def get_retry() -> int:
     return RETRY_TIME
 
 
-class RetryFunctionComponent:
+class BaseRetryComponent(metaclass=ABCMeta):
+
+    @abstractmethod
+    def before_request(self, *args, **kwargs) -> None:
+        pass
+
+
+    @abstractmethod
+    def request_done(self, result):
+        return result
+
+
+    @abstractmethod
+    def request_final(self) -> None:
+        pass
+
+
+    @abstractmethod
+    def request_error(self, error: Exception):
+        return error
+
+
+
+class RetryComponent(BaseRetryComponent):
 
     def before_request(self, *args, **kwargs) -> None:
         pass
@@ -35,19 +59,22 @@ class RetryFunctionComponent:
         return error
 
 
-    async def async_before_request(self, *args, **kwargs) -> None:
+
+class AsyncRetryComponent(BaseRetryComponent):
+
+    async def before_request(self, *args, **kwargs) -> None:
         pass
 
 
-    async def async_request_done(self, result):
+    async def request_done(self, result):
         return result
 
 
-    async def async_request_final(self) -> None:
+    async def request_final(self) -> None:
         pass
 
 
-    async def async_request_error(self, error: Exception):
+    async def request_error(self, error: Exception):
         return error
 
 
@@ -55,37 +82,37 @@ class RetryFunctionComponent:
 class BaseHTTP(metaclass=ABCMeta):
 
     @abstractmethod
-    def request(self, method: str = "GET", timeout: int = -1, *args, **kwargs):
+    def request(self, url, method: str = "GET", timeout: int = -1, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def get(self, *args, **kwargs):
+    def get(self, url, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def post(self, *args, **kwargs):
+    def post(self, url, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def put(self, *args, **kwargs):
+    def put(self, url, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def delete(self, *args, **kwargs):
+    def delete(self, url, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def head(self, *args, **kwargs):
+    def head(self, url, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def option(self, *args, **kwargs):
+    def option(self, url, *args, **kwargs):
         pass
 
 
@@ -121,23 +148,24 @@ class BaseHTTP(metaclass=ABCMeta):
 
 class HTTP(BaseHTTP):
 
-    __Retry_Mechanism_Default_Functions = RetryFunctionComponent()
+    __Retry_Mechanism_Default_Functions = RetryComponent()
     _Before_Request_Callable: Callable = None
     _Request_Done_Callable: Callable = None
     _Request_Final_Callable: Callable = None
     _Error_Request_Callable: Callable = None
 
-    def __init__(self, retry_components: RetryFunctionComponent = None):
+    def __init__(self, retry_components: BaseRetryComponent = None):
         if retry_components is not None:
-            if type(retry_components) is not RetryFunctionComponent:
-                raise TypeError("Parameter *retry_components* should be a sub-class of 'smoothcrawler.http_io.RetryFunctionComponent'.")
+            if isinstance(type(retry_components), BaseRetryComponent):
+                raise TypeError("Parameter *retry_components* should be a sub-class of 'smoothcrawler.http_io.RetryComponent'.")
             self.__Retry_Mechanism_Default_Functions = retry_components
 
 
     def request(self,
+                url,
                 method: str = "GET",
                 timeout: int = -1,
-                retry_components: RetryFunctionComponent = None,
+                retry_components: BaseRetryComponent = None,
                 *args, **kwargs):
 
         _self = self
@@ -169,47 +197,48 @@ class HTTP(BaseHTTP):
 
 
     def __request_process(self,
+                          url,
                           method: str = "GET",
                           timeout: int = -1,
                           *args, **kwargs):
         if re.search(f"get", method, re.IGNORECASE):
-            response = self.get(*args, **kwargs)
+            response = self.get(url, *args, **kwargs)
         elif re.search(f"post", method, re.IGNORECASE):
-            response = self.post(*args, **kwargs)
+            response = self.post(url, *args, **kwargs)
         elif re.search(f"put", method, re.IGNORECASE):
-            response = self.put(*args, **kwargs)
+            response = self.put(url, *args, **kwargs)
         elif re.search(f"delete", method, re.IGNORECASE):
-            response = self.delete(*args, **kwargs)
+            response = self.delete(url, *args, **kwargs)
         elif re.search(f"head", method, re.IGNORECASE):
-            response = self.head(*args, **kwargs)
+            response = self.head(url, *args, **kwargs)
         elif re.search(f"option", method, re.IGNORECASE):
-            response = self.option(*args, **kwargs)
+            response = self.option(url, *args, **kwargs)
         else:
             raise TypeError(f"Invalid HTTP method it got: '{method.upper()}'.")
         return response
 
 
-    def get(self, *args, **kwargs):
+    def get(self, url, *args, **kwargs):
         return None
 
 
-    def post(self, *args, **kwargs):
+    def post(self, url, *args, **kwargs):
         return None
 
 
-    def put(self, *args, **kwargs):
+    def put(self, url, *args, **kwargs):
         return None
 
 
-    def delete(self, *args, **kwargs):
+    def delete(self, url, *args, **kwargs):
         return None
 
 
-    def head(self, *args, **kwargs):
+    def head(self, url, *args, **kwargs):
         return None
 
 
-    def option(self, *args, **kwargs):
+    def option(self, url, *args, **kwargs):
         return None
 
 
@@ -272,13 +301,21 @@ class HTTP(BaseHTTP):
 
 class AsyncHTTP(BaseHTTP):
 
-    __Retry_Mechanism_Default_Functions = RetryFunctionComponent()
+    __Retry_Mechanism_Default_Functions = AsyncRetryComponent()
     _Before_Request_Callable: Callable = None
     _Request_Done_Callable: Callable = None
     _Request_Final_Callable: Callable = None
     _Error_Request_Callable: Callable = None
 
+    def __init__(self, retry_components: BaseRetryComponent = None):
+        if retry_components is not None:
+            if isinstance(type(retry_components), BaseRetryComponent):
+                raise TypeError("Parameter *retry_components* should be a sub-class of 'smoothcrawler.http_io.AsyncRetryComponent'.")
+            self.__Retry_Mechanism_Default_Functions = retry_components
+
+
     async def request(self,
+                      url,
                       method: str = "GET",
                       timeout: int = -1,
                       *args, **kwargs):
@@ -312,54 +349,55 @@ class AsyncHTTP(BaseHTTP):
 
 
     async def __request_process(self,
+                                url,
                                 method: str = "GET",
                                 timeout: int = -1,
                                 *args, **kwargs):
         if re.search(f"get", method, re.IGNORECASE):
-            response = await self.get(*args, **kwargs)
+            response = await self.get(url, *args, **kwargs)
         elif re.search(f"post", method, re.IGNORECASE):
-            response = await self.post(*args, **kwargs)
+            response = await self.post(url, *args, **kwargs)
         elif re.search(f"put", method, re.IGNORECASE):
-            response = await self.put(*args, **kwargs)
+            response = await self.put(url, *args, **kwargs)
         elif re.search(f"delete", method, re.IGNORECASE):
-            response = await self.delete(*args, **kwargs)
+            response = await self.delete(url, *args, **kwargs)
         elif re.search(f"head", method, re.IGNORECASE):
-            response = await self.head(*args, **kwargs)
+            response = await self.head(url, *args, **kwargs)
         elif re.search(f"option", method, re.IGNORECASE):
-            response = await self.option(*args, **kwargs)
+            response = await self.option(url, *args, **kwargs)
         else:
             raise TypeError(f"Invalid HTTP method it got: '{method.upper()}'.")
         return response
 
 
-    async def get(self, *args, **kwargs):
+    async def get(self, url, *args, **kwargs):
         return None
 
 
-    async def post(self, *args, **kwargs):
+    async def post(self, url, *args, **kwargs):
         return None
 
 
-    async def put(self, *args, **kwargs):
+    async def put(self, url, *args, **kwargs):
         return None
 
 
-    async def delete(self, *args, **kwargs):
+    async def delete(self, url, *args, **kwargs):
         return None
 
 
-    async def head(self, *args, **kwargs):
+    async def head(self, url, *args, **kwargs):
         return None
 
 
-    async def option(self, *args, **kwargs):
+    async def option(self, url, *args, **kwargs):
         return None
 
 
     @property
     def before_request(self) -> Callable:
         if self._Before_Request_Callable is None:
-            return self.__Retry_Mechanism_Default_Functions.async_before_request
+            return self.__Retry_Mechanism_Default_Functions.before_request
         return self._Before_Request_Callable
 
 
@@ -371,7 +409,7 @@ class AsyncHTTP(BaseHTTP):
     @property
     def request_done(self) -> Callable:
         if self._Request_Done_Callable is None:
-            return self.__Retry_Mechanism_Default_Functions.async_request_done
+            return self.__Retry_Mechanism_Default_Functions.request_done
         return self._Request_Done_Callable
 
 
@@ -383,7 +421,7 @@ class AsyncHTTP(BaseHTTP):
     @property
     def request_final(self) -> Callable:
         if self._Request_Final_Callable is None:
-            return self.__Retry_Mechanism_Default_Functions.async_request_final
+            return self.__Retry_Mechanism_Default_Functions.request_final
         return self._Request_Final_Callable
 
 
@@ -395,7 +433,7 @@ class AsyncHTTP(BaseHTTP):
     @property
     def request_error(self) -> Callable:
         if self._Error_Request_Callable is None:
-            return self.__Retry_Mechanism_Default_Functions.async_request_error
+            return self.__Retry_Mechanism_Default_Functions.request_error
         return self._Error_Request_Callable
 
 
