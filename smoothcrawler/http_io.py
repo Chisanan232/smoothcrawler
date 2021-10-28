@@ -2,7 +2,7 @@ from multirunnable.api import retry as _retry, async_retry as _async_retry
 
 from abc import ABCMeta, abstractmethod
 from types import MethodType, FunctionType, CoroutineType
-from typing import Callable, Coroutine, Optional, Union, Type
+from typing import Callable, Coroutine, Optional, Union, Type, Any
 import re
 
 
@@ -82,37 +82,37 @@ class AsyncRetryComponent(BaseRetryComponent):
 class BaseHTTP(metaclass=ABCMeta):
 
     @abstractmethod
-    def request(self, url, method: str = "GET", timeout: int = -1, *args, **kwargs):
+    def request(self, url: str, method: str = "GET", timeout: int = -1, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def get(self, url, *args, **kwargs):
+    def get(self, url: str, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def post(self, url, *args, **kwargs):
+    def post(self, url: str, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def put(self, url, *args, **kwargs):
+    def put(self, url: str, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def delete(self, url, *args, **kwargs):
+    def delete(self, url: str, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def head(self, url, *args, **kwargs):
+    def head(self, url: str, *args, **kwargs):
         pass
 
 
     @abstractmethod
-    def option(self, url, *args, **kwargs):
+    def option(self, url: str, *args, **kwargs):
         pass
 
 
@@ -162,7 +162,7 @@ class HTTP(BaseHTTP):
 
 
     def request(self,
-                url,
+                url: str,
                 method: str = "GET",
                 timeout: int = -1,
                 retry_components: BaseRetryComponent = None,
@@ -171,36 +171,39 @@ class HTTP(BaseHTTP):
         _self = self
 
         @_retry(timeout=RETRY_TIME)
-        def __request(_self, _method: str = "GET", _timeout: int = -1, *_args, **_kwargs):
-            __response = _self.__request_process(method=_method, timeout=_timeout, *_args, **_kwargs)
-            return __response
+        def _request(_self, _method: str = "GET", _timeout: int = -1, *_args, **_kwargs):
+            _response = self.__request_process(url=url, method=_method, timeout=_timeout, *_args, **_kwargs)
+            return _response
 
-        @__request.initialization
-        def __before_request(_self, *_args, **_kwargs):
+        @_request.initialization
+        def _before_request(_self, *_args, **_kwargs) -> None:
             self.before_request(*_args, **_kwargs)
 
-        @__request.done_handling
-        def __request_done(_self, result):
+        @_request.done_handling
+        def _request_done(_self, result):
             __result = self.request_done(result)
             return __result
 
-        @__request.final_handling
-        def __request_final(_self):
+        @_request.final_handling
+        def _request_final(_self) -> None:
             self.request_final()
 
-        @__request.error_handling
-        def __request_error(_self, error):
+        @_request.error_handling
+        def _request_error(_self, error: Exception):
             __error_handle = self.request_error(error)
             return __error_handle
 
-        return __request(self, method, timeout, *args, **kwargs)
+        response = _request(self, method, timeout, *args, **kwargs)
+        if response is TypeError and str(response) == f"Invalid HTTP method it got: '{method}'.":
+            raise response
+        return response
 
 
     def __request_process(self,
-                          url,
+                          url: str,
                           method: str = "GET",
                           timeout: int = -1,
-                          *args, **kwargs):
+                          *args, **kwargs) -> Any:
         if re.search(f"get", method, re.IGNORECASE):
             response = self.get(url, *args, **kwargs)
         elif re.search(f"post", method, re.IGNORECASE):
@@ -214,31 +217,31 @@ class HTTP(BaseHTTP):
         elif re.search(f"option", method, re.IGNORECASE):
             response = self.option(url, *args, **kwargs)
         else:
-            raise TypeError(f"Invalid HTTP method it got: '{method.upper()}'.")
+            response = TypeError(f"Invalid HTTP method it got: '{method.upper()}'.")
         return response
 
 
-    def get(self, url, *args, **kwargs):
+    def get(self, url: str, *args, **kwargs):
         return None
 
 
-    def post(self, url, *args, **kwargs):
+    def post(self, url: str, *args, **kwargs):
         return None
 
 
-    def put(self, url, *args, **kwargs):
+    def put(self, url: str, *args, **kwargs):
         return None
 
 
-    def delete(self, url, *args, **kwargs):
+    def delete(self, url: str, *args, **kwargs):
         return None
 
 
-    def head(self, url, *args, **kwargs):
+    def head(self, url: str, *args, **kwargs):
         return None
 
 
-    def option(self, url, *args, **kwargs):
+    def option(self, url: str, *args, **kwargs):
         return None
 
 
@@ -315,7 +318,7 @@ class AsyncHTTP(BaseHTTP):
 
 
     async def request(self,
-                      url,
+                      url: str,
                       method: str = "GET",
                       timeout: int = -1,
                       *args, **kwargs):
@@ -349,7 +352,7 @@ class AsyncHTTP(BaseHTTP):
 
 
     async def __request_process(self,
-                                url,
+                                url: str,
                                 method: str = "GET",
                                 timeout: int = -1,
                                 *args, **kwargs):
@@ -370,27 +373,27 @@ class AsyncHTTP(BaseHTTP):
         return response
 
 
-    async def get(self, url, *args, **kwargs):
+    async def get(self, url: str, *args, **kwargs):
         return None
 
 
-    async def post(self, url, *args, **kwargs):
+    async def post(self, url: str, *args, **kwargs):
         return None
 
 
-    async def put(self, url, *args, **kwargs):
+    async def put(self, url: str, *args, **kwargs):
         return None
 
 
-    async def delete(self, url, *args, **kwargs):
+    async def delete(self, url: str, *args, **kwargs):
         return None
 
 
-    async def head(self, url, *args, **kwargs):
+    async def head(self, url: str, *args, **kwargs):
         return None
 
 
-    async def option(self, url, *args, **kwargs):
+    async def option(self, url: str, *args, **kwargs):
         return None
 
 
