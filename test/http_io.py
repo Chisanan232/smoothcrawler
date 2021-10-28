@@ -12,14 +12,15 @@ from smoothcrawler.http_io import BaseHTTP, HTTP, AsyncHTTP, set_retry, RetryCom
 from abc import ABCMeta, abstractmethod
 import urllib3
 import logging
+import random
 import pytest
 import http
 import time
 
 
 HTTP_METHOD = "GET"
-# TEST_URL = "https://www.google.com"
-TEST_URL = "https://www.youtube.com"
+TEST_URL = "https://www.google.com"
+# TEST_URL = "https://www.youtube.com"
 TEST_TIMEOUT_URL = "https://www.test.com"
 
 RETRY_TIMES = 3
@@ -31,6 +32,17 @@ PUT_FLAG = False
 DELETE_FLAG = False
 HEAD_FLAG = False
 OPTION_FLAG = False
+
+
+def init_flag():
+    global GET_FLAG, POST_FLAG, PUT_FLAG, DELETE_FLAG, HEAD_FLAG, OPTION_FLAG
+
+    GET_FLAG = False
+    POST_FLAG = False
+    PUT_FLAG = False
+    DELETE_FLAG = False
+    HEAD_FLAG = False
+    OPTION_FLAG = False
 
 
 class _TestRequestsHTTP(HTTP):
@@ -53,19 +65,21 @@ class _TestRequestsHTTP(HTTP):
 
 
 class _TestMethodsHTTP(HTTP):
+
     __Http_Response = None
 
-    def get(self, url, *args, **kwargs):
+    def get(self, url: str, *args, **kwargs):
         global GET_FLAG
         GET_FLAG = True
         _http = urllib3.PoolManager()
         self.__Http_Response = _http.request("GET", url)
-        logging.debug("New get implementation.")
-        logging.debug(f"Response: {self.__Http_Response}")
+        print("New get implementation.")
+        print(f"Response: {self.__Http_Response}")
+        print(f"inner GET_FLAG: {GET_FLAG}")
         return self.__Http_Response
 
 
-    def post(self, url, *args, **kwargs):
+    def post(self, url: str, *args, **kwargs):
         global POST_FLAG
         POST_FLAG = True
         _http = urllib3.PoolManager()
@@ -73,7 +87,7 @@ class _TestMethodsHTTP(HTTP):
         return self.__Http_Response
 
 
-    def put(self, url, *args, **kwargs):
+    def put(self, url: str, *args, **kwargs):
         global PUT_FLAG
         PUT_FLAG = True
         _http = urllib3.PoolManager()
@@ -81,7 +95,7 @@ class _TestMethodsHTTP(HTTP):
         return self.__Http_Response
 
 
-    def delete(self, url, *args, **kwargs):
+    def delete(self, url: str, *args, **kwargs):
         global DELETE_FLAG
         DELETE_FLAG = True
         _http = urllib3.PoolManager()
@@ -89,7 +103,7 @@ class _TestMethodsHTTP(HTTP):
         return self.__Http_Response
 
 
-    def head(self, url, *args, **kwargs):
+    def head(self, url: str, *args, **kwargs):
         global HEAD_FLAG
         HEAD_FLAG = True
         _http = urllib3.PoolManager()
@@ -97,7 +111,7 @@ class _TestMethodsHTTP(HTTP):
         return self.__Http_Response
 
 
-    def option(self, url, *args, **kwargs):
+    def option(self, url: str, *args, **kwargs):
         global OPTION_FLAG
         OPTION_FLAG = True
         _http = urllib3.PoolManager()
@@ -112,6 +126,60 @@ class _TestMethodsHTTP(HTTP):
         else:
             logging.warning(f"There is no HTTP response currently.")
             return -1
+
+
+
+class _TestWrongMethodsHTTP(HTTP):
+    __Http_Response = None
+
+    def no_get(self, url, *args, **kwargs):
+        global GET_FLAG
+        GET_FLAG = True
+        _http = urllib3.PoolManager()
+        self.__Http_Response = _http.request("GET", url)
+        logging.debug("New get implementation.")
+        logging.debug(f"Response: {self.__Http_Response}")
+        return self.__Http_Response
+
+
+    def no_post(self, url, *args, **kwargs):
+        global POST_FLAG
+        POST_FLAG = True
+        _http = urllib3.PoolManager()
+        self.__Http_Response = _http.request("POST", url)
+        return self.__Http_Response
+
+
+    def no_put(self, url, *args, **kwargs):
+        global PUT_FLAG
+        PUT_FLAG = True
+        _http = urllib3.PoolManager()
+        self.__Http_Response = _http.request("PUT", url)
+        return self.__Http_Response
+
+
+    def no_delete(self, url, *args, **kwargs):
+        global DELETE_FLAG
+        DELETE_FLAG = True
+        _http = urllib3.PoolManager()
+        self.__Http_Response = _http.request("DELETE", url)
+        return self.__Http_Response
+
+
+    def no_head(self, url, *args, **kwargs):
+        global HEAD_FLAG
+        HEAD_FLAG = True
+        _http = urllib3.PoolManager()
+        self.__Http_Response = _http.request("HEAD", url)
+        return self.__Http_Response
+
+
+    def no_option(self, url, *args, **kwargs):
+        global OPTION_FLAG
+        OPTION_FLAG = True
+        _http = urllib3.PoolManager()
+        self.__Http_Response = _http.request("OPTION", url)
+        return self.__Http_Response
 
 
 Test_Sleep_Time = REQUEST_TIMEOUT + RETRY_TIMES - 1
@@ -166,18 +234,10 @@ class _TestRetryRequestsHTTP(HTTP):
         self.__Fail_Mode = fail_mode
 
 
-    if __Fail_Mode is True:
-        def get(self, url, *args, **kwargs):
-            _http = urllib3.PoolManager()
-            global Test_Sleep_Time
-            # time.sleep(Test_Sleep_Time)
-            if Test_Sleep_Time >= REQUEST_TIMEOUT:
-                raise TimeoutError("For testing")
-            Test_Sleep_Time -= 1
-            self.__Http_Response = _http.request("GET", url)
-            return self.__Http_Response
-    else:
-        def get(self, url, *args, **kwargs):
+    def get(self, url, *args, **kwargs):
+        if self.__Fail_Mode is True:
+            raise TimeoutError("For testing")
+        else:
             _http = urllib3.PoolManager()
             self.__Http_Response = _http.request("GET", url)
             return self.__Http_Response
@@ -376,7 +436,7 @@ class TestHttp(BaseHttpTestSpec):
 
     def test_request_method(self, *args, **kwargs):
         req_ver_http = _TestRequestsHTTP()
-        req_response = req_ver_http.request(TEST_URL)
+        req_response = req_ver_http.request(url=TEST_URL)
         assert req_response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
         assert req_ver_http.status_code is not None, "HTTP status code must to be a value."
 
@@ -387,9 +447,10 @@ class TestHttp(BaseHttpTestSpec):
         # Test HTTP method 'GET'
         method_response = methods_http.request(url=TEST_URL, method="GET")
         assert method_response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
-        assert methods_http.status_code is not None, "HTTP status code must to be a value."
+        __http_status = method_response.status
+        assert __http_status is not None, "HTTP status code must to be a value."
 
-        status_code = int(methods_http.status_code)
+        status_code = int(__http_status)
         assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
 
 
@@ -402,54 +463,352 @@ class TestHttp(BaseHttpTestSpec):
 
 
     def test_get(self):
-        _http_cls = _TestRetryRequestsHTTP()
-        response = _http_cls.request(method="GET", url=TEST_URL)
+
+        def final_assert():
+            assert GET_FLAG is False, \
+                f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        req_method = "GET"
+        req_method_upper = req_method.upper()
+        req_method_lower = req_method.lower()
+
+        _http_cls = _TestMethodsHTTP()
+        TestHttp.__test_request_with_upper_char(_http_cls, req_method)
+        assert GET_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_replace_random_char(_http_cls, req_method)
+        assert GET_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_insert_random_char(_http_cls, req_method)
+        assert GET_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_invalid_char(_http_cls, final_assert)
+
+        response = TestHttp.__request_with_no_override(req_method)
+        assert GET_FLAG is False, \
+            f"'HTTP.request' should not call function '{req_method.lower()}' because it doesn't override it."
+        assert response is None, "The HTTP response result should be None in default."
 
 
     def test_post(self):
-        _http_cls = _TestRetryRequestsHTTP()
-        response = _http_cls.request(method="POST", url=TEST_URL)
+
+        def final_assert():
+            assert POST_FLAG is False, \
+                f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        req_method = "POST"
+        req_method_upper = req_method.upper()
+        req_method_lower = req_method.lower()
+
+        _http_cls = _TestMethodsHTTP()
+        TestHttp.__test_request_with_upper_char(_http_cls, req_method)
+        assert POST_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_replace_random_char(_http_cls, req_method)
+        assert POST_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_insert_random_char(_http_cls, req_method)
+        assert POST_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_invalid_char(_http_cls, final_assert)
+
+        response = TestHttp.__request_with_no_override(req_method)
+        assert POST_FLAG is False, \
+            f"'HTTP.request' should not call function '{req_method.lower()}' because it doesn't override it."
+        assert response is None, "The HTTP response result should be None in default."
 
 
     def test_put(self):
-        _http_cls = _TestRetryRequestsHTTP()
-        response = _http_cls.request(method="PUT", url=TEST_URL)
+
+        def final_assert():
+            assert PUT_FLAG is False, \
+                f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        req_method = "PUT"
+        req_method_upper = req_method.upper()
+        req_method_lower = req_method.lower()
+
+        _http_cls = _TestMethodsHTTP()
+        TestHttp.__test_request_with_upper_char(_http_cls, req_method)
+        assert PUT_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_replace_random_char(_http_cls, req_method)
+        assert PUT_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_insert_random_char(_http_cls, req_method)
+        assert PUT_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_invalid_char(_http_cls, final_assert)
+
+        response = TestHttp.__request_with_no_override(req_method)
+        assert PUT_FLAG is False, \
+            f"'HTTP.request' should not call function '{req_method.lower()}' because it doesn't override it."
+        assert response is None, "The HTTP response result should be None in default."
 
 
     def test_delete(self):
-        _http_cls = _TestRetryRequestsHTTP()
-        response = _http_cls.request(method="DELETE", url=TEST_URL)
+
+        def final_assert():
+            assert DELETE_FLAG is False, \
+                f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        req_method = "DELETE"
+        req_method_upper = req_method.upper()
+        req_method_lower = req_method.lower()
+
+        _http_cls = _TestMethodsHTTP()
+        TestHttp.__test_request_with_upper_char(_http_cls, req_method)
+        assert DELETE_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_replace_random_char(_http_cls, req_method)
+        assert DELETE_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_insert_random_char(_http_cls, req_method)
+        assert DELETE_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_invalid_char(_http_cls, final_assert)
+
+        response = TestHttp.__request_with_no_override(req_method)
+        assert DELETE_FLAG is False, \
+            f"'HTTP.request' should not call function '{req_method.lower()}' because it doesn't override it."
+        assert response is None, "The HTTP response result should be None in default."
 
 
     def test_head(self):
-        _http_cls = _TestRetryRequestsHTTP()
-        response = _http_cls.request(method="HEAD", url=TEST_URL)
+
+        def final_assert():
+            assert HEAD_FLAG is False, \
+                f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        req_method = "HEAD"
+        req_method_upper = req_method.upper()
+        req_method_lower = req_method.lower()
+
+        _http_cls = _TestMethodsHTTP()
+        TestHttp.__test_request_with_upper_char(_http_cls, req_method)
+        assert HEAD_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_replace_random_char(_http_cls, req_method)
+        assert HEAD_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_insert_random_char(_http_cls, req_method)
+        assert HEAD_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_invalid_char(_http_cls, final_assert)
+
+        response = TestHttp.__request_with_no_override(req_method)
+        assert HEAD_FLAG is False, \
+            f"'HTTP.request' should not call function '{req_method.lower()}' because it doesn't override it."
+        assert response is None, "The HTTP response result should be None in default."
 
 
     def test_option(self):
-        _http_cls = _TestRetryRequestsHTTP()
-        response = _http_cls.request(method="OPTION", url=TEST_URL)
+
+        def final_assert():
+            assert OPTION_FLAG is False, \
+                f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        req_method = "OPTION"
+        req_method_upper = req_method.upper()
+        req_method_lower = req_method.lower()
+
+        _http_cls = _TestMethodsHTTP()
+        TestHttp.__test_request_with_upper_char(_http_cls, req_method)
+        assert OPTION_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_replace_random_char(_http_cls, req_method)
+        assert OPTION_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_insert_random_char(_http_cls, req_method)
+        assert OPTION_FLAG is True, \
+            f"'HTTP.request' should call function '{req_method_lower}' with option *method* value is '{req_method_upper}'."
+
+        TestHttp.__test_request_with_invalid_char(_http_cls, final_assert)
+
+        response = TestHttp.__request_with_no_override(req_method)
+        assert OPTION_FLAG is False, \
+            f"'HTTP.request' should not call function '{req_method.lower()}' because it doesn't override it."
+        assert response is None, "The HTTP response result should be None in default."
+
+
+    @staticmethod
+    def __test_request_with_upper_char(http_cls, req_method: str):
+        init_flag()
+
+        req_method_upper = req_method.upper()
+
+        response = http_cls.request(method=req_method_upper, url=TEST_URL)
+        # response = _http_cls.get(method=req_method_upper, url=TEST_URL)
+        logging.info(f"Test with option value '{req_method_upper}'.")
+
+
+    @staticmethod
+    def __test_request_with_replace_random_char(http_cls, req_method: str):
+        init_flag()
+
+        req_method_replace_random = TestHttp.__replace_random_char(target=req_method)
+
+        response = http_cls.request(method=req_method_replace_random, url=TEST_URL)
+        logging.info(f"Test with option value '{req_method_replace_random}'.")
+
+
+    @staticmethod
+    def __test_request_with_insert_random_char(http_cls, req_method: str):
+        init_flag()
+
+        john_cena_char = "$%#%$%#%YouCAnNotSeeME"
+        req_method_insert_random = TestHttp.__insert_random_char(target=john_cena_char, insert=req_method)
+
+        # No sure that whether package should filter this characters or not
+        response = http_cls.request(method=req_method_insert_random, url=TEST_URL)
+        logging.info(f"Test with option value '{req_method_insert_random}'.")
+
+
+    @staticmethod
+    def __test_request_with_invalid_char(http_cls, assert_callable):
+        init_flag()
+
+        magic_char = "$%##%NowYouSeeME"
+
+        # Invalid option value
+        request_exception = None
+        try:
+            request_exception = http_cls.request(method=magic_char, url=TEST_URL)
+        except Exception as e:
+            request_exception = e
+        finally:
+            logging.info(f"Test with option value '{magic_char}'.")
+            assert_callable()
+            assert type(request_exception) is TypeError, \
+                "'HTTP.request' should filter invalid option value."
+
+
+    @staticmethod
+    def __request_with_no_override(req_method: str):
+        _http_cls = _TestWrongMethodsHTTP()
+        response = _http_cls.request(method=req_method, url=TEST_URL)
+        logging.info(f"Test with option value '{req_method}'.")
+        return response
+
+
+    @staticmethod
+    def __replace_random_char(target: str) -> str:
+        replaced_char_index = random.randrange(0, len(target))
+        if replaced_char_index % random.randrange(1, 2) == random.randrange(1, 2):
+            target_random = target[:replaced_char_index] + target[replaced_char_index].upper() + target[replaced_char_index + 1:]
+        else:
+            target_random = target[:replaced_char_index] + target[replaced_char_index].lower() + target[replaced_char_index + 1:]
+        return target_random
+
+
+    @staticmethod
+    def __insert_random_char(target: str, insert: str) -> str:
+        insert_char_index = random.randrange(0, len(target))
+        if insert_char_index % random.randrange(1, 2) == random.randrange(1, 2):
+            target_random = target[:insert_char_index] + insert + target[insert_char_index:]
+        else:
+            target_random = target[:insert_char_index] + insert + target[insert_char_index:]
+        return target_random
 
 
     def test_retry_before_request(self):
-        pass
+        set_retry(RETRY_TIMES)
+        my_retry = _MyRetry()
+        for test_mode in [True, False]:
+            global Initial_Flag
+            Initial_Flag = 0
+
+            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
+            http_cls.before_request = my_retry.before_request
+            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
+            print("[DEBUG] response: ", response)
+
+            if test_mode is True:
+                assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
+            else:
+                assert Initial_Flag <= RETRY_TIMES, "Initial process times should be equal to retry times."
 
 
     def test_retry_request_done(self):
-        pass
+        set_retry(RETRY_TIMES)
+        my_retry = _MyRetry()
+        for test_mode in [True, False]:
+            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
+            http_cls.request_done = my_retry.request_done
+            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
+            print("[DEBUG] response: ", response)
+
+            global Done_Flag
+
+            if test_mode is True:
+                assert Done_Flag == 0, "The times of done process should be equal to retry times."
+            else:
+                assert Done_Flag <= RETRY_TIMES, "The times of done process should be equal to retry times."
+
+            Done_Flag = 0
 
 
     def test_retry_request_final(self):
-        pass
+        set_retry(RETRY_TIMES)
+        my_retry = _MyRetry()
+        for test_mode in [True, False]:
+            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
+            http_cls.request_final = my_retry.request_final
+            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
+            print("[DEBUG] response: ", response)
+
+            global Final_Flag
+            assert Final_Flag <= RETRY_TIMES, "Final process times should be equal to retry times."
+            print("[DEBUG] Final_Flag: ", Final_Flag)
+            print("[DEBUG] Exception_Flag: ", Exception_Flag)
+            Final_Flag = 0
 
 
     def test_retry_request_error(self):
-        pass
+        set_retry(RETRY_TIMES)
+        my_retry = _MyRetry()
+        for test_mode in [True, False]:
+            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
+            http_cls.request_error = my_retry.request_error
+            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
+            print("[DEBUG] response: ", response)
+
+            global Exception_Flag
+
+            if test_mode is True:
+                assert Exception_Flag == RETRY_TIMES, "The times of exception handling process should be equal to retry times."
+            else:
+                assert Exception_Flag <= RETRY_TIMES, "The times of exception handling process should be equal to retry times."
+
+            Exception_Flag = 0
 
 
     def test_retry_mechanism_with_properties(self):
         set_retry(RETRY_TIMES)
         for test_mode in [True, False]:
+            global Initial_Flag, Done_Flag, Final_Flag, Exception_Flag
+            Initial_Flag = 0
+            Done_Flag = 0
+            Final_Flag = 0
+            Exception_Flag = 0
+
             http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
             # It will raise TimeoutError if it doesn't get response after 5 seconds later.
             # And it will retry to send HTTP request if it got any exception util overrate the retry times.
@@ -461,71 +820,41 @@ class TestHttp(BaseHttpTestSpec):
 
             response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
             TestHttp.__request_checking(test_mode, http_cls, response)
-            # assert response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
-            # assert http_cls.status_code is not None, "HTTP status code must to be a value."
-            #
-            # status_code = int(http_cls.status_code)
-            # assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
-            #
-            # assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
-            # assert Done_Flag == RETRY_TIMES or Exception_Flag == RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
-            # assert Final_Flag == RETRY_TIMES, "Final process times should be equal to retry times."
 
 
     def test_retry_mechanism_with_adapter(self):
         set_retry(RETRY_TIMES)
         for test_mode in [True, False]:
+            global Initial_Flag, Done_Flag, Final_Flag, Exception_Flag
+            Initial_Flag = 0
+            Done_Flag = 0
+            Final_Flag = 0
+            Exception_Flag = 0
+
             http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode, retry_components=_MyRetry())
             response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
             TestHttp.__request_checking(test_mode, http_cls, response)
-            # assert response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
-            # assert http_cls.status_code is not None, "HTTP status code must to be a value."
-            #
-            # status_code = int(http_cls.status_code)
-            # assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
-            #
-            # assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
-            # assert Done_Flag == RETRY_TIMES or Exception_Flag == RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
-            # assert Final_Flag == RETRY_TIMES, "Final process times should be equal to retry times."
 
 
     @staticmethod
     def __request_checking(fail_mode, http_cls, response):
         assert response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
-        assert http_cls.status_code is not None, "HTTP status code must to be a value."
-
-        status_code = int(http_cls.status_code)
-        assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
-
         if fail_mode is True:
             assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
             assert Done_Flag == RETRY_TIMES or Exception_Flag == RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
             assert Final_Flag == RETRY_TIMES, "Final process times should be equal to retry times."
         else:
+            __http_status = response.status
+            assert __http_status is not None, "HTTP status code must to be a value."
+
+            status_code = int(__http_status)
+            assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
+
             assert Initial_Flag <= RETRY_TIMES, "Initial process times should be equal to retry times."
             assert Done_Flag <= RETRY_TIMES and \
                    Exception_Flag <= RETRY_TIMES and \
-                   (Done_Flag + Exception_Flag) == RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
+                   (Done_Flag + Exception_Flag) <= RETRY_TIMES, "The times of done process or exception handling process should be equal to retry times."
             assert Final_Flag <= RETRY_TIMES, "Final process times should be equal to retry times."
-
-
-    def test_request(self, *args, **kwargs):
-        req_ver_http = _TestRequestsHTTP()
-        req_response = req_ver_http.request(url=TEST_URL)
-        assert req_response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
-        assert req_ver_http.status_code is not None, "HTTP status code must to be a value."
-
-        status_code = int(req_ver_http.status_code)
-        assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
-
-        methods_http = _TestMethodsHTTP()
-        # Test HTTP method 'GET'
-        method_response = methods_http.request(method="GET", url=TEST_URL)
-        assert method_response is not None, "It doesn't implement the code which has responsibility about sending HTTP request."
-        assert methods_http.status_code is not None, "HTTP status code must to be a value."
-
-        status_code = int(methods_http.status_code)
-        assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
 
 
     @staticmethod
