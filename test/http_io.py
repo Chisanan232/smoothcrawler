@@ -15,7 +15,6 @@ import logging
 import random
 import pytest
 import http
-import time
 
 
 HTTP_METHOD = "GET"
@@ -32,6 +31,13 @@ PUT_FLAG = False
 DELETE_FLAG = False
 HEAD_FLAG = False
 OPTION_FLAG = False
+
+Test_Http_Logger = logging.getLogger("smoothcrawler.http_io")
+stream_logger = logging.StreamHandler()
+stream_logger.setLevel(level=logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(module)s.%(funcName)s(): %(levelname)-8s %(message)s')
+stream_logger.setFormatter(formatter)
+Test_Http_Logger.addHandler(stream_logger)
 
 
 def init_flag():
@@ -50,6 +56,7 @@ class _TestRequestsHTTP(HTTP):
     __Http_Response = None
 
     def request(self, url, method="GET", timeout=-1, retry_components=None, *args, **kwargs):
+        Test_Http_Logger.info(f"Send HTTP request by 'urllib3'.")
         _http = urllib3.PoolManager()
         self.__Http_Response = _http.request(HTTP_METHOD, url)
         return self.__Http_Response
@@ -73,9 +80,6 @@ class _TestMethodsHTTP(HTTP):
         GET_FLAG = True
         _http = urllib3.PoolManager()
         self.__Http_Response = _http.request("GET", url)
-        print("New get implementation.")
-        print(f"Response: {self.__Http_Response}")
-        print(f"inner GET_FLAG: {GET_FLAG}")
         return self.__Http_Response
 
 
@@ -124,7 +128,6 @@ class _TestMethodsHTTP(HTTP):
         if self.__Http_Response:
             return self.__Http_Response.status
         else:
-            logging.warning(f"There is no HTTP response currently.")
             return -1
 
 
@@ -199,23 +202,23 @@ class _MyRetry(RetryComponent):
     def before_request(self, *args, **kwargs):
         global Initial_Flag
         Initial_Flag += 1
-        logging.info("Initial process.")
+        Test_Http_Logger.info("Initial task process.")
 
     def request_done(self, result):
         global Done_Flag
         Done_Flag += 1
-        logging.info("Task done! ")
+        Test_Http_Logger.info("Task done! ")
         return result
 
     def request_final(self):
         global Final_Flag
         Final_Flag += 1
-        logging.info("Task done! ")
+        Test_Http_Logger.info("Task done! ")
 
     def request_error(self, error):
         global Exception_Flag
         Exception_Flag += 1
-        logging.info("Got failure when run task.")
+        Test_Http_Logger.info("Got failure when run task.")
         return error
 
 
@@ -248,12 +251,12 @@ class _TestRetryRequestsHTTP(HTTP):
         if self.__Http_Response:
             return self.__Http_Response.status
         else:
-            logging.warning(f"There is no HTTP response currently.")
+            Test_Http_Logger.warning(f"There is no HTTP response currently.")
             return -1
 
 
     def http_200_response(self, response):
-        logging.info("Get the HTTP response successfully.")
+        Test_Http_Logger.info("Get the HTTP response successfully.")
 
 
 
@@ -655,8 +658,7 @@ class TestHttp(BaseHttpTestSpec):
         req_method_upper = req_method.upper()
 
         response = http_cls.request(method=req_method_upper, url=TEST_URL)
-        # response = _http_cls.get(method=req_method_upper, url=TEST_URL)
-        logging.info(f"Test with option value '{req_method_upper}'.")
+        Test_Http_Logger.info(f"Test with option value '{req_method_upper}'.")
 
 
     @staticmethod
@@ -666,7 +668,7 @@ class TestHttp(BaseHttpTestSpec):
         req_method_replace_random = TestHttp.__replace_random_char(target=req_method)
 
         response = http_cls.request(method=req_method_replace_random, url=TEST_URL)
-        logging.info(f"Test with option value '{req_method_replace_random}'.")
+        Test_Http_Logger.info(f"Test with option value '{req_method_replace_random}'.")
 
 
     @staticmethod
@@ -678,7 +680,7 @@ class TestHttp(BaseHttpTestSpec):
 
         # No sure that whether package should filter this characters or not
         response = http_cls.request(method=req_method_insert_random, url=TEST_URL)
-        logging.info(f"Test with option value '{req_method_insert_random}'.")
+        Test_Http_Logger.info(f"Test with option value '{req_method_insert_random}'.")
 
 
     @staticmethod
@@ -694,7 +696,7 @@ class TestHttp(BaseHttpTestSpec):
         except Exception as e:
             request_exception = e
         finally:
-            logging.info(f"Test with option value '{magic_char}'.")
+            Test_Http_Logger.info(f"Test with option value '{magic_char}'.")
             assert_callable()
             assert type(request_exception) is TypeError, \
                 "'HTTP.request' should filter invalid option value."
@@ -704,7 +706,7 @@ class TestHttp(BaseHttpTestSpec):
     def __request_with_no_override(req_method: str):
         _http_cls = _TestWrongMethodsHTTP()
         response = _http_cls.request(method=req_method, url=TEST_URL)
-        logging.info(f"Test with option value '{req_method}'.")
+        Test_Http_Logger.info(f"Test with option value '{req_method}'.")
         return response
 
 
@@ -738,7 +740,6 @@ class TestHttp(BaseHttpTestSpec):
             http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
             http_cls.before_request = my_retry.before_request
             response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
-            print("[DEBUG] response: ", response)
 
             if test_mode is True:
                 assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
@@ -753,7 +754,6 @@ class TestHttp(BaseHttpTestSpec):
             http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
             http_cls.request_done = my_retry.request_done
             response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
-            print("[DEBUG] response: ", response)
 
             global Done_Flag
 
@@ -772,12 +772,11 @@ class TestHttp(BaseHttpTestSpec):
             http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
             http_cls.request_final = my_retry.request_final
             response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
-            print("[DEBUG] response: ", response)
 
             global Final_Flag
             assert Final_Flag <= RETRY_TIMES, "Final process times should be equal to retry times."
-            print("[DEBUG] Final_Flag: ", Final_Flag)
-            print("[DEBUG] Exception_Flag: ", Exception_Flag)
+            Test_Http_Logger.debug(f"Final_Flag: {Final_Flag}")
+            Test_Http_Logger.debug(f"Exception_Flag: {Exception_Flag}")
             Final_Flag = 0
 
 
@@ -788,7 +787,6 @@ class TestHttp(BaseHttpTestSpec):
             http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
             http_cls.request_error = my_retry.request_error
             response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
-            print("[DEBUG] response: ", response)
 
             global Exception_Flag
 
