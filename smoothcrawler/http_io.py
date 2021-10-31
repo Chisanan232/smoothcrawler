@@ -156,7 +156,7 @@ class HTTP(BaseHTTP):
 
     def __init__(self, retry_components: BaseRetryComponent = None):
         if retry_components is not None:
-            if isinstance(type(retry_components), BaseRetryComponent):
+            if not isinstance(retry_components, BaseRetryComponent):
                 raise TypeError("Parameter *retry_components* should be a sub-class of 'smoothcrawler.http_io.RetryComponent'.")
             self.__Retry_Mechanism_Default_Functions = retry_components
 
@@ -312,7 +312,7 @@ class AsyncHTTP(BaseHTTP):
 
     def __init__(self, retry_components: BaseRetryComponent = None):
         if retry_components is not None:
-            if isinstance(type(retry_components), BaseRetryComponent):
+            if isinstance(retry_components, BaseRetryComponent):
                 raise TypeError("Parameter *retry_components* should be a sub-class of 'smoothcrawler.http_io.AsyncRetryComponent'.")
             self.__Retry_Mechanism_Default_Functions = retry_components
 
@@ -326,29 +326,32 @@ class AsyncHTTP(BaseHTTP):
         _self = self
 
         @_async_retry(timeout=RETRY_TIME)
-        async def __request(_self, _method: str = "GET", _timeout: int = -1, *_args, **_kwargs):
-            __response = await _self.__request_process(method=_method, timeout=_timeout, *_args, **_kwargs)
+        async def _request(_self, _method: str = "GET", _timeout: int = -1, *_args, **_kwargs):
+            __response = await _self.__request_process(url=url, method=_method, timeout=_timeout, *_args, **_kwargs)
             return __response
 
-        @__request.initialization
-        async def __before_request(_self, *_args, **_kwargs):
+        @_request.initialization
+        async def _before_request(_self, *_args, **_kwargs):
             await self.before_request(*_args, **_kwargs)
 
-        @__request.done_handling
-        async def __request_done(_self, result):
+        @_request.done_handling
+        async def _request_done(_self, result):
             __result = await self.request_done(result)
             return __result
 
-        @__request.final_handling
-        async def __request_final(_self):
+        @_request.final_handling
+        async def _request_final(_self):
             await self.request_final()
 
-        @__request.error_handling
-        async def __request_error(_self, error):
+        @_request.error_handling
+        async def _request_error(_self, error):
             __error_handle = await self.request_error(error)
             return __error_handle
 
-        return await __request(self, method, timeout, *args, **kwargs)
+        response = await _request(self, method, timeout, *args, **kwargs)
+        if response is TypeError and str(response) == f"Invalid HTTP method it got: '{method}'.":
+            raise response
+        return response
 
 
     async def __request_process(self,
@@ -369,7 +372,7 @@ class AsyncHTTP(BaseHTTP):
         elif re.search(f"option", method, re.IGNORECASE):
             response = await self.option(url, *args, **kwargs)
         else:
-            raise TypeError(f"Invalid HTTP method it got: '{method.upper()}'.")
+            response = TypeError(f"Invalid HTTP method it got: '{method.upper()}'.")
         return response
 
 
