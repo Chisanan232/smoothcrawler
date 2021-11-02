@@ -1,18 +1,14 @@
-from smoothcrawler.persistence import (
+from smoothcrawler.persistence.file import (
     SavingStrategy,
     SavingMediator,
-    FileSaver, File, CSVFormatter, XLSXFormatter, JSONFormatter,
-    ArchiverSaver, Archiver, ZIPArchiver)
+    FileSaver, File, CSVFormatter, ArchiverSaver, ZIPArchiver)
 
 from abc import ABCMeta, abstractmethod
 from typing import List, Dict
 from pathlib import Path
-from collections import namedtuple
 import threading
 import csv
 import os
-import re
-
 
 Test_CSV_File_Path: str = str(Path("./for_testing.csv"))
 Test_XLSX_File_Path: str = "for_testing.xlsx"
