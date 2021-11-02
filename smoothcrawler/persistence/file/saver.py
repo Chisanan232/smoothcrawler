@@ -1,4 +1,4 @@
-from . import (
+from smoothcrawler.persistence.file import (
     SavingStrategy as _SavingStrategy,
     _Super_Worker_Saving_File_Key,
     _Sub_Worker_Saving_File_Key,
