@@ -8,7 +8,7 @@ final_path = os.path.join(package_multirunnable_path, "apache-multirunnable")
 sys.path.append(final_path)
 
 
-from smoothcrawler.http_io import BaseHTTP, HTTP, AsyncHTTP, set_retry, RetryComponent
+from smoothcrawler.httpio import BaseHTTP, HTTP, AsyncHTTP, set_retry, RetryComponent
 from abc import ABCMeta, abstractmethod
 import urllib3
 import logging
