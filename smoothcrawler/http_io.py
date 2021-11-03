@@ -81,6 +81,10 @@ class AsyncRetryComponent(BaseRetryComponent):
 
 class BaseHTTP(metaclass=ABCMeta):
 
+    def __init__(self, retry_components: BaseRetryComponent = None):
+        pass
+
+
     @abstractmethod
     def request(self, url: str, method: str = "GET", timeout: int = -1, *args, **kwargs):
         pass
@@ -155,6 +159,7 @@ class HTTP(BaseHTTP):
     _Error_Request_Callable: Callable = None
 
     def __init__(self, retry_components: BaseRetryComponent = None):
+        super().__init__(retry_components)
         if retry_components is not None:
             if not isinstance(retry_components, BaseRetryComponent):
                 raise TypeError("Parameter *retry_components* should be a sub-class of 'smoothcrawler.http_io.RetryComponent'.")
@@ -311,6 +316,7 @@ class AsyncHTTP(BaseHTTP):
     _Error_Request_Callable: Callable = None
 
     def __init__(self, retry_components: BaseRetryComponent = None):
+        super().__init__(retry_components)
         if retry_components is not None:
             if isinstance(retry_components, BaseRetryComponent):
                 raise TypeError("Parameter *retry_components* should be a sub-class of 'smoothcrawler.http_io.AsyncRetryComponent'.")
