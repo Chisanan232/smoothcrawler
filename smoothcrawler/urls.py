@@ -266,7 +266,7 @@ class URL(BaseURL):
             self._datetime_handling(_datetime=new_datetime, days=days, hours=hours, minutes=minutes, seconds=seconds)
 
 
-    @dispatch(list)
+    @dispatch((list, tuple, set))
     def _iterator_handling(self, iter: Union[list, tuple, set]) -> None:
         for ele in iter:
             option = URL._add_flag(option=OPTION_VAR_ITERATOR)
@@ -276,7 +276,10 @@ class URL(BaseURL):
 
     @dispatch(dict)
     def _iterator_handling(self, iter: dict) -> None:
-        pass
+        for key, val in iter.items():
+            option = URL._add_flag(option=OPTION_VAR_ITERATOR)
+            target_url = self.base_url.replace(option, f"{key}={val}")
+            self.urls.append(target_url)
 
 
     @staticmethod
