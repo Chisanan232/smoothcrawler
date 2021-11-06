@@ -41,7 +41,7 @@ class BaseURL(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def generate(self, **kwargs) -> List[str]:
+    def generate(self) -> List[str]:
         pass
 
 
@@ -70,6 +70,10 @@ class URL(BaseURL):
         self._start_date = None
         self._end_date = None
         self._diff_days = None
+        self._period_days = 1
+        self._period_hours = 0
+        self._period_minutes = 0
+        self._period_seconds = 0
 
         self._option: str = None
         self.urls: List = []
@@ -103,7 +107,38 @@ class URL(BaseURL):
                self.is_iterator_rule()
 
 
-    def generate(self, **kwargs) -> List[str]:
+    @property
+    def period_days(self) -> int:
+        return self._period_days
+
+
+    @property
+    def period_hours(self) -> int:
+        return self._period_hours
+
+
+    @property
+    def period_minutes(self) -> int:
+        return self._period_minutes
+
+
+    @property
+    def period_seconds(self) -> int:
+        return self._period_seconds
+
+
+    def set_period(self, days: Optional[int] = None, hours: Optional[int] = None, minutes: Optional[int] = None, seconds: Optional[int] = None) -> None:
+        if days is not None:
+            self._period_days = days
+        if hours is not None:
+            self._period_hours = hours
+        if minutes is not None:
+            self._period_minutes = minutes
+        if seconds is not None:
+            self._period_seconds = seconds
+
+
+    def generate(self) -> List[str]:
         if self.option_is_index:
             # Check whether the needed option id ready or not.
             if self.start is None and self.end is None:
@@ -130,8 +165,8 @@ class URL(BaseURL):
             self._start_date = datetime.strptime(self.start, formatter)
             self._end_date = datetime.strptime(self.end, formatter)
             self._diff_days = (self._end_date.date() - self._start_date.date()).days
-            _days = kwargs.get("days", 1)
-            self._date_handling(_date=self._start_date, days=_days)
+
+            self._date_handling(_date=self._start_date, days=self.period_days)
 
         elif self.option_is_datetime:
             if self.start is None and self.end is None:
@@ -145,12 +180,12 @@ class URL(BaseURL):
             self._end_date = datetime.strptime(self.end, formatter)
             self._diff_days = (self._end_date - self._start_date).days
 
-            _days = kwargs.get("days", 1)
-            _hours = kwargs.get("hours", 0)
-            _minutes = kwargs.get("minutes", 0)
-            _seconds = kwargs.get("seconds", 0)
-
-            self._datetime_handling(_datetime=self._start_date, days=_days, hours=_hours, minutes=_minutes, seconds=_seconds)
+            self._datetime_handling(
+                _datetime=self._start_date,
+                days=self.period_days,
+                hours=self.period_hours,
+                minutes=self.period_minutes,
+                seconds=self.period_seconds)
 
         elif self.option_is_iterator:
             if self.iterator is None:
@@ -215,17 +250,17 @@ class URL(BaseURL):
         date_parsers = []
         time_parsers = []
         if year_format is not None:
-            date_parsers += "%Y"
+            date_parsers.append("%Y")
         if month_format is not None:
-            date_parsers += "%m"
+            date_parsers.append("%m")
         if day_format is not None:
-            date_parsers += "%d"
+            date_parsers.append("%d")
         if hour_format is not None:
-            time_parsers += "%H"
+            time_parsers.append("%H")
         if minute_format is not None:
-            time_parsers += "%M"
+            time_parsers.append("%M")
         if second_format is not None:
-            time_parsers += "%S"
+            time_parsers.append("%S")
 
         date_formatter = date_split_char.join(date_parsers)
         time_formatter = time_split_char.join(time_parsers)
@@ -258,7 +293,7 @@ class URL(BaseURL):
             date_option_val = date_option_val.replace(":", "")
             date_option_val = date_option_val.replace("T", "")
 
-            option = URL._add_flag(option=OPTION_VAR_DATE)
+            option = URL._add_flag(option=OPTION_VAR_DATETIME)
             target_url = self.base_url.replace(option, date_option_val)
             self.urls.append(target_url)
 
@@ -276,6 +311,20 @@ class URL(BaseURL):
 
     @dispatch(dict)
     def _iterator_handling(self, iter: dict) -> None:
+        """
+        Description:
+            It could all data content which be saved in received parameter
+            combine the key and value as HTTP GET method format options.
+
+        Example:
+            Received parameter value:
+                {"index_1": 1, "index_2": 2}
+            Result:
+                index_1=1, index_2=2
+
+        :param iter:
+        :return:
+        """
         for key, val in iter.items():
             option = URL._add_flag(option=OPTION_VAR_ITERATOR)
             target_url = self.base_url.replace(option, f"{key}={val}")
