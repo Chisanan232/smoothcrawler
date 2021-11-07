@@ -37,11 +37,26 @@ class BaseURL(metaclass=ABCMeta):
     @property
     @abstractmethod
     def base_url(self) -> str:
+        """
+        Description:
+            The URL (or API) which is the target to crawl but it's still
+            not the entire valid URL. For example, it's maybe like
+            'http://www.test.com', also maybe like 'http://www.test.com?date={date}' .
+            For first one, it's a valid URL and we could get some data which we need.
+            But for second one, it's just a URL format it should be but
+            it's not valid, we still should know the option 'date'.
+        :return:
+        """
         pass
 
 
     @abstractmethod
     def generate(self) -> List[str]:
+        """
+        Description:
+            Generating all the URLs we need base on the options.
+        :return:
+        """
         pass
 
 
@@ -161,7 +176,11 @@ class URL(BaseURL):
             if type(self.start) is not str or type(self.end) is not str:
                 raise ValueError("The value format is incorrect of options *start* and *end*.")
 
-            formatter = URL._convert_formatter(formatter=self.formatter)
+            chksum = URL._is_py_datetime_format(formatter=self.formatter)
+            if chksum is True:
+                formatter = self.formatter
+            else:
+                formatter = URL._convert_formatter(formatter=self.formatter)
             self._start_date = datetime.strptime(self.start, formatter)
             self._end_date = datetime.strptime(self.end, formatter)
             self._diff_days = (self._end_date.date() - self._start_date.date()).days
@@ -175,7 +194,11 @@ class URL(BaseURL):
             if type(self.start) is not str or type(self.end) is not str:
                 raise ValueError("The value format is incorrect of options *start* and *end*.")
 
-            formatter = URL._convert_formatter(formatter=self.formatter)
+            chksum = URL._is_py_datetime_format(formatter=self.formatter)
+            if chksum is True:
+                formatter = self.formatter
+            else:
+                formatter = URL._convert_formatter(formatter=self.formatter)
             self._start_date = datetime.strptime(self.start, formatter)
             self._end_date = datetime.strptime(self.end, formatter)
             self._diff_days = (self._end_date - self._start_date).days
@@ -209,10 +232,33 @@ class URL(BaseURL):
 
 
     @staticmethod
+    def _is_py_datetime_format(formatter: str) -> bool:
+
+        def chk_char(t_ele) -> bool:
+            res = re.search(r"[Y,m,d,H,M,S]", t_ele)
+            if res is not None:
+                return True
+            else:
+                return False
+
+        if "%" in formatter:
+            chk_result = map(chk_char, formatter.split("%"))
+            if False in chk_result:
+                return False
+            else:
+                return True
+        else:
+            return False
+
+
+    @staticmethod
     def _convert_formatter(formatter: str) -> str:
         """
         Description:
-            About parameter *formatter*,
+            About parameter *formatter*, it could be like below:
+            1. yyyymmdd, example: 20210101
+            2. yyyy/mm/dd, example: 2021/01/01
+            3. yyyy-mm-dd, example: 2021-01-01
         :param formatter:
         :return:
         """
@@ -277,7 +323,7 @@ class URL(BaseURL):
 
     def _date_handling(self, _date: datetime, days: int) -> None:
         if _date <= self._end_date:
-            date_option_val = _date.isoformat().replace("-", "")
+            date_option_val = _date.strftime("%Y%m%d").replace("-", "")
 
             option = URL._add_flag(option=OPTION_VAR_DATE)
             target_url = self.base_url.replace(option, date_option_val)
