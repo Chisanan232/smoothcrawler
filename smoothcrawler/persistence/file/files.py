@@ -169,7 +169,7 @@ class XLSXFormatter(File):
 
 
     def stream(self, data: List[list]) -> str:
-        pass
+        raise NotImplementedError
 
 
     @staticmethod
