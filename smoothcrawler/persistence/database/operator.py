@@ -1,4 +1,4 @@
-from smoothcrawler.persistence.database.strategy import BaseDataBaseConnection as _BaseDataBaseConnection
+from smoothcrawler.persistence.database.strategy import BaseDatabaseConnection as _BaseDataBaseConnection
 
 from abc import ABCMeta, abstractmethod, ABC
 from typing import Tuple, Any
