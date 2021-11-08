@@ -6,12 +6,12 @@ from smoothcrawler._utils import get_cls_name as _get_cls_name
 
 from abc import ABC, abstractmethod
 from typing import Dict, cast, Union
-from multiprocessing import cpu_count
 from multirunnable.api import retry, async_retry
+from multiprocessing import cpu_count
 
 
 
-class BaseDataBaseConnection(BasePersistence):
+class BaseDatabaseConnection(BasePersistence):
 
     _Database_Config: Dict[str, Union[str, int]] = {
         "host": "",
@@ -143,9 +143,10 @@ class BaseDataBaseConnection(BasePersistence):
 
 
 Database_Connection: object = None
+Database_Cursor: object = None
 
 
-class SingleConnection(BaseDataBaseConnection, ABC):
+class SingleConnection(BaseDatabaseConnection, ABC):
 
     def __init__(self, **kwargs):
         super(SingleConnection, self).__init__(**kwargs)
@@ -182,7 +183,7 @@ class SingleConnection(BaseDataBaseConnection, ABC):
 Database_Connection_Pool: object = None
 
 
-class ConnectionPool(BaseDataBaseConnection):
+class ConnectionPool(BaseDatabaseConnection):
 
     __Connection_Pool_Name: str = "smoothcrawler"
     _Connection_Pool = None
@@ -261,6 +262,15 @@ class Globalize:
         if conn is not None:
             global Database_Connection
             Database_Connection = conn
+        else:
+            raise GlobalizeObjectError
+
+
+    @staticmethod
+    def cursor(cursor) -> None:
+        if cursor is not None:
+            global Database_Cursor
+            Database_Cursor = cursor
         else:
             raise GlobalizeObjectError
 
