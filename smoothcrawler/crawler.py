@@ -1,3 +1,5 @@
+import logging
+
 from smoothcrawler.httpio import (
     set_retry as _set_retry,
     BaseHTTP as _BaseHttpIo,
@@ -9,6 +11,8 @@ from smoothcrawler.data import (
 )
 from smoothcrawler.persistence.file import PersistenceFacade as _PersistenceFacade
 
+from multirunnable.framework import OceanResult
+from multirunnable.adapter import Lock, BoundedSemaphore
 from multirunnable import (
     RunningMode,
     SimpleExecutor,
@@ -16,10 +20,11 @@ from multirunnable import (
     SimplePool,
     PersistencePool
 )
-from multirunnable.adapter import Lock, BoundedSemaphore
 
 from abc import ABCMeta, abstractmethod
-from typing import Iterable, Any, Union, Optional
+from queue import Queue
+from typing import List, Iterable, Any, Union, Optional, Deque, Sequence
+from multipledispatch import dispatch
 
 
 
@@ -29,6 +34,17 @@ class BaseCrawler(metaclass=ABCMeta):
     _HTTP_Response_Parser: _BaseHTTPResponseParser = None
     _Data_Handler: _BaseDataHandler = None
     _Persistence: _PersistenceFacade = None
+
+    def __init__(self):
+        self._file = None
+        self._mode = None
+
+        self._db_host = None
+        self._db_port = None
+        self._db_user = None
+        self._db_password = None
+        self._db_database = None
+
 
     @property
     def http_io(self) -> _BaseHttpIo:
@@ -78,6 +94,11 @@ class BaseCrawler(metaclass=ABCMeta):
         self._Persistence = persistence
 
 
+    @property
+    def file(self):
+        return
+
+
     def crawl(self,
               url: str,
               method: str,
@@ -100,19 +121,90 @@ class BaseCrawler(metaclass=ABCMeta):
 
 class SimpleCrawler(BaseCrawler):
 
-    def run(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
-        parsed_response = self.crawl(method=method, url=url, retry=retry)
+    @dispatch(str, str)
+    def run(self, method: str, url: str) -> Optional[Any]:
+        parsed_response = self.crawl(method=method, url=url)
         data = self.data_handler.process(result=parsed_response)
-        if file is not "":
-            self.persistence.save_as_file(file=file, mode="a+", data=data)
         return data
 
 
+    @dispatch(str, list)
+    def run(self, method: str, url: List[str]) -> Optional[List]:
+        result = []
+        for _target_url in url:
+            parsed_response = self.crawl(method=method, url=_target_url)
+            data = self.data_handler.process(result=parsed_response)
+            result.append(data)
+        return result
 
-class BaseMultiRunnableCrawler(BaseCrawler):
+
+
+class MultiRunnableCrawler(BaseCrawler):
+
+    _Persistence_Factory = None
+
+    @property
+    def persistence_factory(self):
+        return self._Persistence_Factory
+
+
+    @persistence_factory.setter
+    def persistence_factory(self, factory):
+        self._Persistence_Factory = factory
+
+
+    def process_with_list(self,
+                          method: str,
+                          url: List[str],
+                          retry: int = 1,
+                          *args, **kwargs) -> Any:
+        """
+        Description:
+            Handling the crawler process with List which saving URLs.
+        :param method:
+        :param url:
+        :param retry:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        _set_retry(times=retry)
+        for _target_url in url:
+            parsed_response = self.crawl(method=method, url=_target_url)
+            handled_data = self.data_handler.process(result=parsed_response)
+
+
+    def process_with_queue(self,
+                           method: str,
+                           url: Queue,
+                           retry: int = 1,
+                           *args, **kwargs) -> Any:
+        """
+        Description:
+            Handling the crawler process with Queue which saving URLs.
+        :param method:
+        :param url:
+        :param retry:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        _set_retry(times=retry)
+        while url.empty() is False:
+            _target_url = url.get()
+            parsed_response = self.crawl(method=method, url=_target_url)
+            handled_data = self.data_handler.process(result=parsed_response)
+
 
     @staticmethod
     def _get_lock_feature(lock: bool = True, sema_value: int = 1):
+        """
+        Description:
+            Initialize Lock or Semaphore. Why? because of persistence process.
+        :param lock:
+        :param sema_value:
+        :return:
+        """
         if lock is True:
             feature = Lock()
         else:
@@ -122,41 +214,92 @@ class BaseMultiRunnableCrawler(BaseCrawler):
         return feature
 
 
+    @staticmethod
+    def _divide_urls(urls: List[str], executor_number: int) -> List[List[str]]:
+        """
+        Description:
+            Divide the data list which saving URLs to be a list saving multiple lists.
+        :param urls:
+        :param executor_number:
+        :return:
+        """
+        urls_len = len(urls)
+        urls_interval = int(urls_len / executor_number)
+        urls_list_collection = [urls[i:i + urls_interval] for i in range(0, executor_number, urls_interval)]
+        return urls_list_collection
 
-class ExecutorCrawler(BaseMultiRunnableCrawler):
+
+
+class ExecutorCrawler(MultiRunnableCrawler):
 
     def __init__(self, mode: RunningMode, executors: int):
+        super(ExecutorCrawler, self).__init__()
         self.__executor_number = executors
         self.__executor = SimpleExecutor(mode=mode, executors=executors)
 
 
-    def run(self, method: str, url: str, retry: int = 1, file: str = "", lock: bool = True, sema_value: int = 1) -> Optional:
-        feature = BaseMultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
+    def run(self, method: str, url: Union[List[str], Queue], retry: int = 1, lock: bool = True, sema_value: int = 1) -> Optional:
+        feature = MultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
 
-        self.__executor.run(
+        if type(url) is list:
+            urls_len = len(url)
+            if urls_len <= self.__executor_number:
+                logging.warning(f"It will have some idle executors deosn't be activated because target URLs amount more than executor number.")
+                logging.warning(f"URLs amount: {urls_len}")
+                logging.warning(f"Executor number: {self.__executor_number}")
+                self.map(method=method, url=url, retry=retry, lock=lock, sema_value=sema_value)
+            else:
+                urls_list_collection = MultiRunnableCrawler._divide_urls(urls=url, executor_number=self.__executor_number)
+
+                self.__executor.run(
+                    function=self.process_with_list,
+                    args={"method": method, "url": urls_list_collection, "retry": retry},
+                    queue_tasks=None,
+                    features=feature)
+        else:
+            self.__executor.run(
+                function=self.process_with_queue,
+                args={"method": method, "url": url, "retry": retry},
+                queue_tasks=None,
+                features=feature)
+
+        result = self.__executor.result()
+        return result
+
+
+    def map(self, method: str, url: List[str], retry: int = 1, lock: bool = True, sema_value: int = 1) -> Optional:
+        feature = MultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
+        args_iterator = [{"method": method, "url": _url, "retry": retry} for _url in url]
+
+        self.__executor.map(
             function=self.crawl,
-            args={"method": method, "url": url, "retry": retry, "file": file},
+            args_iter=args_iterator,
             queue_tasks=None,
             features=feature)
         result = self.__executor.result()
         return result
 
 
-    # def map(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
-    #     self.__executor.map()
-
-
 
 class AsyncSimpleCrawler(BaseCrawler):
+
+    def crawl(self,
+              url: str,
+              method: str,
+              retry: int = 1,
+              *args, **kwargs) -> Any:
+        pass
+
 
     def run(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
         pass
 
 
 
-class PoolCrawler(BaseMultiRunnableCrawler):
+class PoolCrawler(MultiRunnableCrawler):
 
     def __init__(self, mode, pool_size, tasks_size):
+        super(PoolCrawler, self).__init__()
         self.__pool = SimplePool(mode=mode, pool_size=pool_size, tasks_size=tasks_size)
 
 
@@ -170,7 +313,14 @@ class PoolCrawler(BaseMultiRunnableCrawler):
 
 
     def init(self, lock: bool = True, sema_value: int = 1) -> None:
-        feature = BaseMultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
+        """
+        Description:
+            Initialize something which be needed before new Pool object.
+        :param lock:
+        :param sema_value:
+        :return:
+        """
+        feature = MultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
         self.__pool.initial(queue_tasks=None, features=feature)
 
 
@@ -192,6 +342,20 @@ class PoolCrawler(BaseMultiRunnableCrawler):
         return result
 
 
+    def map(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
+        _kwargs = {"method": method, "url": url, "retry": retry, "file": file}
+        self.__pool.map(function=self.crawl, **_kwargs)
+        result = self.__pool.get_result()
+        return result
+
+
+    def async_map(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
+        _kwargs = {"method": method, "url": url, "retry": retry, "file": file}
+        self.__pool.async_map(function=self.crawl, **_kwargs)
+        result = self.__pool.get_result()
+        return result
+
+
     def terminal(self) -> None:
         self.__pool.terminal()
 
@@ -201,9 +365,11 @@ class PoolCrawler(BaseMultiRunnableCrawler):
 
 
 
-class CrazyCrawler(BaseMultiRunnableCrawler):
+class CrazyCrawler(MultiRunnableCrawler):
 
     def __init__(self):
+        super(CrazyCrawler, self).__init__()
+
         # Get the resource info of the running environment
         mode = RunningMode.Parallel
         pool_size = 1
