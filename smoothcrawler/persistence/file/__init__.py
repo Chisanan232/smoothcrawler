@@ -34,6 +34,26 @@ from smoothcrawler.persistence.file.mediator import BaseMediator as _BaseMediato
 from smoothcrawler.persistence.file.saver import FileSaver, ArchiverSaver
 from smoothcrawler.persistence.file.files import File, CSVFormatter, XLSXFormatter, JSONFormatter
 from smoothcrawler.persistence.file.archivers import ZIPArchiver
+from smoothcrawler.persistence.file.layer import DataPersistenceLayer
+from smoothcrawler.persistence.file.layer import FileAccessObject
+from smoothcrawler._utils import ImportModule
+
+
+
+class FileFormat(Enum):
+
+    CSV = {
+        "package": ".persistence.file",
+        "formatter": "CSVFormatter"
+    }
+    XLSX = {
+        "package": ".persistence.file",
+        "formatter": "XLSXFormatter"
+    }
+    JSON = {
+        "package": ".persistence.file",
+        "formatter": "JSONFormatter"
+    }
 
 
 
@@ -48,15 +68,11 @@ class PersistenceFacade:
 
 
     def save_as_file(self, file: str, mode: str, data: List[list]):
-        is_csv = re.search(r"\w{1,128}\.csv", file)
-        is_xlsx = re.search(r"\w{1,128}\.xlsx", file)
-        is_json = re.search(r"\w{1,128}\.json", file)
-        if is_csv:
+        is_valid_format = re.search(r"\w{1,128}\.[csv,xlsx,json]", file)
+        if is_valid_format:
+            file_formatter = is_valid_format.group(0).upper()
+            ImportModule.get_class(pkg_name=".persistence.file", cls_name=f"{file_formatter}Formatter")
             file_saver = FileSaver(file=CSVFormatter())
-        elif is_xlsx:
-            file_saver = FileSaver(file=XLSXFormatter())
-        elif is_json:
-            file_saver = FileSaver(file=JSONFormatter())
         else:
             file_format = file.split("\.")[-1]
             raise TypeError(f"It doesn't support file format '{file_format}' currently.")
