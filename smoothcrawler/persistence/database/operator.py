@@ -1,8 +1,10 @@
 from smoothcrawler.persistence.database.strategy import BaseDatabaseConnection as _BaseDataBaseConnection
 
-from abc import ABCMeta, abstractmethod, ABC
-from typing import Tuple, Any
+from abc import ABCMeta, ABC, abstractmethod
+from typing import Tuple, TypeVar, Generic, Any
 
+
+T = TypeVar("T")
 
 
 class BaseDatabaseOperator(metaclass=ABCMeta):
@@ -12,54 +14,54 @@ class BaseDatabaseOperator(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def initial(self) -> object:
+    def initial(self) -> Generic[T]:
         pass
 
 
     @property
     @abstractmethod
-    def column_names(self) -> object:
+    def column_names(self) -> Generic[T]:
         pass
 
 
     @property
     @abstractmethod
-    def row_count(self) -> object:
+    def row_count(self) -> Generic[T]:
         pass
 
 
     @abstractmethod
-    def next(self) -> object:
+    def next(self) -> Generic[T]:
         pass
 
 
     @abstractmethod
-    def execute(self, operator: Any, params: Tuple = None, multi: bool = False) -> object:
+    def execute(self, operator: Any, params: Tuple = None, multi: bool = False) -> Generic[T]:
         pass
 
 
     @abstractmethod
-    def execute_many(self, operator: Any, seq_params=None) -> object:
+    def execute_many(self, operator: Any, seq_params=None) -> Generic[T]:
         pass
 
 
     @abstractmethod
-    def fetch(self) -> object:
+    def fetch(self) -> Generic[T]:
         pass
 
 
     @abstractmethod
-    def fetch_one(self) -> object:
+    def fetch_one(self) -> Generic[T]:
         pass
 
 
     @abstractmethod
-    def fetch_many(self, size: int = None) -> object:
+    def fetch_many(self, size: int = None) -> Generic[T]:
         pass
 
 
     @abstractmethod
-    def fetch_all(self) -> object:
+    def fetch_all(self) -> Generic[T]:
         pass
 
 

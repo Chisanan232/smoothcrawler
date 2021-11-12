@@ -5,10 +5,12 @@ from smoothcrawler.exceptions import GlobalizeObjectError
 from smoothcrawler._utils import get_cls_name as _get_cls_name
 
 from abc import ABC, abstractmethod
-from typing import Dict, cast, Union
+from typing import Dict, TypeVar, Generic, cast, Union
 from multirunnable.api import retry, async_retry
 from multiprocessing import cpu_count
 
+
+T = TypeVar("T")
 
 
 class BaseDatabaseConnection(BasePersistence):
@@ -21,8 +23,8 @@ class BaseDatabaseConnection(BasePersistence):
         "database": ""
     }
 
-    _Database_Connection = None
-    _Database_Cursor = None
+    _Database_Connection: Generic[T] = None
+    _Database_Cursor: Generic[T] = None
 
     def __init__(self, **kwargs):
         if kwargs:
@@ -72,22 +74,22 @@ class BaseDatabaseConnection(BasePersistence):
 
 
     @property
-    def connection(self) -> object:
+    def connection(self) -> Generic[T]:
         return self._Database_Connection
 
 
     @connection.setter
-    def connection(self, conn) -> None:
+    def connection(self, conn: Generic[T]) -> None:
         self._Database_Connection = conn
 
 
     @property
-    def cursor(self) -> object:
+    def cursor(self) -> Generic[T]:
         return self._Database_Cursor
 
 
     @cursor.setter
-    def cursor(self, cur) -> None:
+    def cursor(self, cur: Generic[T]) -> None:
         self._Database_Cursor = cur
 
 
@@ -103,7 +105,7 @@ class BaseDatabaseConnection(BasePersistence):
 
 
     @abstractmethod
-    def connect_database(self, **kwargs) -> object:
+    def connect_database(self, **kwargs) -> Generic[T]:
         """
         Description:
             Connection to database and return the connection or connection pool instance.
@@ -113,7 +115,7 @@ class BaseDatabaseConnection(BasePersistence):
 
 
     @abstractmethod
-    def get_one_connection(self) -> object:
+    def get_one_connection(self) -> Generic[T]:
         """
         Description:
             Get one database connection instance.
@@ -123,7 +125,7 @@ class BaseDatabaseConnection(BasePersistence):
 
 
     @abstractmethod
-    def build_cursor(self) -> object:
+    def build_cursor(self) -> Generic[T]:
         """
         Description:
             Build cursor instance of one specific connection instance.
@@ -142,8 +144,8 @@ class BaseDatabaseConnection(BasePersistence):
         pass
 
 
-Database_Connection: object = None
-Database_Cursor: object = None
+Database_Connection: Generic[T] = None
+Database_Cursor: Generic[T] = None
 
 
 class SingleConnection(BaseDatabaseConnection, ABC):
@@ -173,24 +175,24 @@ class SingleConnection(BaseDatabaseConnection, ABC):
         self.cursor = self.build_cursor()
 
 
-    def get_one_connection(self) -> object:
+    def get_one_connection(self) -> Generic[T]:
         if self.connection is not None:
             return self.connection
         self.connection = self.connect_database()
         return self.connection
 
 
-Database_Connection_Pool: object = None
+Database_Connection_Pool: Generic[T] = None
 
 
 class ConnectionPool(BaseDatabaseConnection):
 
-    __Connection_Pool_Name: str = "smoothcrawler"
+    _Connection_Pool_Name: str = "smoothcrawler"
     _Connection_Pool = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        pool_name_val = cast(str, kwargs.get("pool_name", self.__Connection_Pool_Name))
+        pool_name_val = cast(str, kwargs.get("pool_name", self._Connection_Pool_Name))
         pool_size_val = cast(int, kwargs.get("pool_size", cpu_count()))
 
         self._Database_Config["pool_name"] = pool_name_val
@@ -215,7 +217,7 @@ class ConnectionPool(BaseDatabaseConnection):
 
 
     @property
-    def database_connection_pool(self) -> object:
+    def database_connection_pool(self) -> Generic[T]:
         """
         Description:
             Get the database connection pool which has been globalized.
@@ -258,7 +260,7 @@ class ConnectionPool(BaseDatabaseConnection):
 class Globalize:
 
     @staticmethod
-    def connection(conn) -> None:
+    def connection(conn: Generic[T]) -> None:
         if conn is not None:
             global Database_Connection
             Database_Connection = conn
@@ -267,7 +269,7 @@ class Globalize:
 
 
     @staticmethod
-    def cursor(cursor) -> None:
+    def cursor(cursor: Generic[T]) -> None:
         if cursor is not None:
             global Database_Cursor
             Database_Cursor = cursor
@@ -276,7 +278,7 @@ class Globalize:
 
 
     @staticmethod
-    def connection_pool(pool) -> None:
+    def connection_pool(pool: Generic[T]) -> None:
         if pool is not None:
             global Database_Connection_Pool
             Database_Connection_Pool = pool
