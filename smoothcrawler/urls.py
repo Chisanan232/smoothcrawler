@@ -99,6 +99,11 @@ class URL(BaseURL):
         return self.__Base_Url
 
 
+    @base_url.setter
+    def base_url(self, url: str) -> None:
+        self.__Base_Url = url
+
+
     def is_index_rule(self) -> bool:
         return self.option_is_index is not None
 
