@@ -18,7 +18,9 @@ from smoothcrawler.crawler import SimpleCrawler, ExecutorCrawler, PoolCrawler
 from smoothcrawler.httpio import set_retry
 from smoothcrawler.urls import URL
 from smoothcrawler import RunningMode
+
 from crawler_components import MyRetry, StockHTTPRequest, StockHTTPResponseParser, StockDataHandler
+from crawler_layer import StockDao, StockFao
 
 
 HTTP_METHOD = "GET"
@@ -32,7 +34,7 @@ def run_as_simple_crawler():
     sc.http_io = StockHTTPRequest(retry_components=MyRetry())
     sc.http_response_parser = StockHTTPResponseParser()
     sc.data_handler = StockDataHandler()
-    data = sc.run(method="GET", url=Test_URL_TW_Stock)
+    data = sc.run("GET", Test_URL_TW_Stock)
     print(f"[DEBUG] data: {data}")
 
 
@@ -80,7 +82,13 @@ if __name__ == '__main__':
     set_retry(3)
     print("Set retry times.")
 
-    # run_as_simple_crawler()
-    run_as_executor_crawler()
-    # run_as_pool_crawler()
+    print("++++++++++++++ Simple Crawler ++++++++++++++++++")
+    run_as_simple_crawler()
 
+    print("++++++++++++++ Executor Crawler ++++++++++++++++++")
+    run_as_executor_crawler()
+
+    print("++++++++++++++ Pool Crawler ++++++++++++++++++")
+    run_as_pool_crawler()
+
+    print("All task done.")
