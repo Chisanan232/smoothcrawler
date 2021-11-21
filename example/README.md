@@ -1,17 +1,17 @@
-# Example Code with '_multirunnable_'
+# Example Code with '_smoothcrawler_'
 
 Here are some example code about how to use this package.
 
-[Environment](#environment) | [Simple](#simple) | [Persistence](#persistence)
+[Environment](#environment)
 
 ## Environment
 <hr>
 
-[![Supported Versions](https://img.shields.io/pypi/pyversions/multirunnable.svg)](https://pypi.org/project/multirunnable)
+[![Supported Versions](https://img.shields.io/pypi/pyversions/smoothcrawler.svg?logo=python&logoColor=FBE072)](https://pypi.org/project/smoothcrawler)
 
 Installation by pip:
 
-    pip install multirunnable
+    pip install smoothcrawler
 
 It also could run in virtual environment like _virtualenv_ or Docker. 
 It's better to clear your own develop environment.
@@ -51,32 +51,13 @@ You also could verify its brief:
 
 Everything is ready, let's start to build image:
 
-    docker build -t multirunnable_client:py37 ./ -f ./Dockerfile_py37
+    docker build -t smoothcrawler_client:py37 ./ -f ./Dockerfile_py37
 
 Verify it:
 
-    docker images | grep -E "multirunnable_client"
+    docker images | grep -E "smoothcrawler_client"
 
 Run it:
 
-    docker run --name multirunnable_executor_client_py37 multirunnable_client:py37
-
-
-## Simple
-### Executor
-<hr>
-
-In generally, this combination (executor with simple strategy) could handle 60% scenario.
-
-### Pool
-<hr>
-
-
-## Persistence
-### Executor
-<hr>
-
-
-### Pool
-<hr>
+    docker run --name smoothcrawler_executor_client_py37 smoothcrawler_client:py37
 
