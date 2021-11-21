@@ -1,7 +1,7 @@
 from smoothcrawler.persistence.database.strategy import BaseDatabaseConnection as _BaseDataBaseConnection
 
 from abc import ABCMeta, ABC, abstractmethod
-from typing import Tuple, TypeVar, Generic, Any
+from typing import Tuple, TypeVar, Generic, Any, Optional
 
 
 T = TypeVar("T")
@@ -62,7 +62,7 @@ class BaseDatabaseOperator(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def close(self) -> None:
+    def close(self) -> Optional[Generic[T]]:
         pass
 
 
@@ -74,6 +74,6 @@ class DatabaseOperator(BaseDatabaseOperator, ABC):
         self._conn_strategy.build_cursor()
 
 
-    def close(self) -> None:
-        self._conn_strategy.close()
+    def close(self) -> Optional[Generic[T]]:
+        return self._conn_strategy.close()
 
