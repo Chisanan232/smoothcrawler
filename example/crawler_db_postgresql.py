@@ -15,9 +15,19 @@ class PostgreSQLSingleConnection(SingleConnection):
         return super(PostgreSQLSingleConnection, self).connection()
 
 
+    @connection.setter
+    def connection(self, conn: PostgreSQLConnection) -> None:
+        super(PostgreSQLSingleConnection, self).connection = conn
+
+
     @property
     def cursor(self) -> PostgreSQLCursor:
         return super(PostgreSQLSingleConnection, self).cursor()
+
+
+    @cursor.setter
+    def cursor(self, cur: PostgreSQLCursor) -> None:
+        super(PostgreSQLSingleConnection, self).cursor = cur
 
 
     def connect_database(self, **kwargs) -> PostgreSQLConnection:
@@ -76,17 +86,8 @@ class PostgreSQLOperator(DatabaseOperator):
 
 
     @property
-    def column_names(self) -> PostgreSQLCursor:
-        pass
-
-
-    @property
     def row_count(self) -> PostgreSQLCursor:
         return self.__cursor.rowcount
-
-
-    def next(self) -> PostgreSQLCursor:
-        pass
 
 
     def execute(self, operator: Any, params: Tuple = None, multi: bool = False) -> PostgreSQLCursor:
@@ -95,10 +96,6 @@ class PostgreSQLOperator(DatabaseOperator):
 
     def execute_many(self, operator: Any, seq_params=None) -> PostgreSQLCursor:
         return self.__cursor.executemany(query=operator, vars_list=seq_params)
-
-
-    def fetch(self) -> PostgreSQLCursor:
-        pass
 
 
     def fetch_one(self) -> PostgreSQLCursor:
@@ -111,8 +108,4 @@ class PostgreSQLOperator(DatabaseOperator):
 
     def fetch_all(self) -> PostgreSQLCursor:
         return self.__cursor.fetchall()
-
-
-    def reset(self) -> None:
-        pass
 
