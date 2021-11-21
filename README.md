@@ -44,7 +44,7 @@ The work-flow about crawling target web content: <br>
 
 
 * ### Cross Function Flow
-<img src="https://github.com/Chisanan232/smoothcrawler/blob/master/doc/imgs/smoothcrawler_simple-crawler_cross-function_flow.png" width="461" height="681" alt="Crawler work-flow"/><br/>
+<img src="https://github.com/Chisanan232/smoothcrawler/blob/master/doc/imgs/smoothcrawler_simple-crawler_cross-function_flow.png" width="725" height="700" alt="Crawler work-flow"/><br/>
 
 
 ## Usage
