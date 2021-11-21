@@ -75,34 +75,17 @@ class CassandraOperator(DatabaseOperator):
         self.__session: CassandraSession = conn_strategy.cursor
 
 
-    @property
-    def column_names(self) -> Generic[T]:
-        pass
-
-
-    @property
-    def row_count(self) -> Generic[T]:
-        pass
-
-
-    def next(self) -> Generic[T]:
-        pass
-
-
     def execute(self, operator: Any, params: Tuple = None, multi: bool = False) -> Generic[T]:
-        self.__session.execute()
+        return self.__session.execute(query=operator, parameters=params)
 
 
-    def execute_many(self, operator: Any, seq_params=None) -> Generic[T]:
-        pass
-
-
-    def fetch(self) -> Generic[T]:
-        pass
-
-
-    def fetch_one(self) -> Generic[T]:
-        pass
+    def fetch_one(self, **kwargs) -> Generic[T]:
+        keyspace = kwargs.get("keyspace", "")
+        query = kwargs.get("query", None)
+        if query is None:
+            raise ValueError("SQL query cannot be empty.")
+        simple_statement = SimpleStatement(keyspace=keyspace, query_string=query, fetch_size=1)
+        yield self.__session.execute(query=simple_statement)
 
 
     def fetch_many(self, size: int = None, **kwargs) -> Generic[T]:
@@ -112,12 +95,4 @@ class CassandraOperator(DatabaseOperator):
             raise ValueError("SQL query cannot be empty.")
         simple_statement = SimpleStatement(keyspace=keyspace, query_string=query, fetch_size=size)
         yield self.__session.execute(query=simple_statement)
-
-
-    def fetch_all(self) -> Generic[T]:
-        pass
-
-
-    def reset(self) -> None:
-        pass
 
