@@ -13,26 +13,22 @@ class BaseDatabaseOperator(metaclass=ABCMeta):
         self._conn_strategy = conn_strategy
 
 
-    @abstractmethod
     def initial(self) -> Generic[T]:
         pass
 
 
     @property
-    @abstractmethod
     def column_names(self) -> Generic[T]:
-        pass
+        raise NotImplementedError
 
 
     @property
-    @abstractmethod
     def row_count(self) -> Generic[T]:
-        pass
+        raise NotImplementedError
 
 
-    @abstractmethod
     def next(self) -> Generic[T]:
-        pass
+        raise NotImplementedError
 
 
     @abstractmethod
@@ -40,19 +36,16 @@ class BaseDatabaseOperator(metaclass=ABCMeta):
         pass
 
 
-    @abstractmethod
     def execute_many(self, operator: Any, seq_params=None) -> Generic[T]:
-        pass
+        raise NotImplementedError
 
 
-    @abstractmethod
     def fetch(self) -> Generic[T]:
-        pass
+        raise NotImplementedError
 
 
-    @abstractmethod
     def fetch_one(self) -> Generic[T]:
-        pass
+        raise NotImplementedError
 
 
     @abstractmethod
@@ -60,14 +53,12 @@ class BaseDatabaseOperator(metaclass=ABCMeta):
         pass
 
 
-    @abstractmethod
     def fetch_all(self) -> Generic[T]:
-        pass
+        raise NotImplementedError
 
 
-    @abstractmethod
     def reset(self) -> None:
-        pass
+        raise NotImplementedError
 
 
     @abstractmethod
@@ -79,7 +70,8 @@ class BaseDatabaseOperator(metaclass=ABCMeta):
 class DatabaseOperator(BaseDatabaseOperator, ABC):
 
     def initial(self, **kwargs) -> None:
-        self._conn_strategy.initialize(**kwargs)
+        self._conn_strategy.connect_database(**kwargs)
+        self._conn_strategy.build_cursor()
 
 
     def close(self) -> None:
