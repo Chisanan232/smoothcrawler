@@ -71,8 +71,8 @@ class PersistenceFacade:
         is_valid_format = re.search(r"\w{1,128}\.[csv,xlsx,json]", file)
         if is_valid_format:
             file_formatter = is_valid_format.group(0).upper()
-            ImportModule.get_class(pkg_name=".persistence.file", cls_name=f"{file_formatter}Formatter")
-            file_saver = FileSaver(file=CSVFormatter())
+            formatter_cls = ImportModule.get_class(pkg_name=".persistence.file", cls_name=f"{file_formatter}Formatter")
+            file_saver = FileSaver(file=formatter_cls())
         else:
             file_format = file.split("\.")[-1]
             raise TypeError(f"It doesn't support file format '{file_format}' currently.")
