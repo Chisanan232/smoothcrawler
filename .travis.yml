@@ -7,7 +7,7 @@ python:
   - 3.10
 
 notifications:
-  email: false
+  email: true
 
 before_install:
   - python --version
@@ -19,7 +19,8 @@ install:
   - pip install "requests"    # install package + test dependencies
   - pip install -r requirements.txt
 
-script: pytest    # run tests
+script:
+  - pytest    # run tests
 
 after_success:
   - codecov    # submit coverage
