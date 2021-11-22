@@ -96,3 +96,7 @@ class CassandraOperator(DatabaseOperator):
         simple_statement = SimpleStatement(keyspace=keyspace, query_string=query, fetch_size=size)
         yield self.__session.execute(query=simple_statement)
 
+
+    def close(self) -> None:
+        pass
+
