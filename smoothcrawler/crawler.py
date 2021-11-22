@@ -94,11 +94,6 @@ class BaseCrawler(metaclass=ABCMeta):
         self._Persistence = persistence
 
 
-    @property
-    def file(self):
-        return
-
-
     def crawl(self,
               url: str,
               method: str,
@@ -108,14 +103,6 @@ class BaseCrawler(metaclass=ABCMeta):
         response = self.http_io.request(method=method, url=url, *args, **kwargs)
         parsed_response = self.http_response_parser.parse_content(response=response)
         return parsed_response
-
-
-    def request(self):
-        pass
-
-
-    def parse(self):
-        pass
 
 
 
@@ -281,24 +268,93 @@ class ExecutorCrawler(MultiRunnableCrawler):
 
 
 
-class AsyncSimpleCrawler(BaseCrawler):
+class AsyncSimpleCrawler(MultiRunnableCrawler):
 
-    def crawl(self,
-              url: str,
-              method: str,
-              retry: int = 1,
-              *args, **kwargs) -> Any:
-        pass
+    def __init__(self, executors: int):
+        super(AsyncSimpleCrawler, self).__init__()
+        self.__executor_number = executors
+        self.__executor = SimpleExecutor(mode=RunningMode.Asynchronous, executors=executors)
 
 
-    def run(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
-        pass
+    async def crawl(self,
+                    url: str,
+                    method: str,
+                    retry: int = 1,
+                    *args, **kwargs) -> Any:
+        _set_retry(times=retry)
+        response = await self.http_io.request(method=method, url=url, *args, **kwargs)
+        parsed_response = await self.http_response_parser.parse_content(response=response)
+        return parsed_response
+
+
+    async def process_with_list(self,
+                                method: str,
+                                url: List[str],
+                                retry: int = 1,
+                                *args, **kwargs) -> Any:
+        """
+        Description:
+            Handling the crawler process with List which saving URLs.
+        :param method:
+        :param url:
+        :param retry:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        _set_retry(times=retry)
+        for _target_url in url:
+            parsed_response = await self.crawl(method=method, url=_target_url)
+            handled_data = await self.data_handler.process(result=parsed_response)
+
+
+    async def process_with_queue(self,
+                                 method: str,
+                                 url: Queue,
+                                 retry: int = 1,
+                                 *args, **kwargs) -> Any:
+        """
+        Description:
+            Handling the crawler process with Queue which saving URLs.
+        :param method:
+        :param url:
+        :param retry:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        _set_retry(times=retry)
+        while url.empty() is False:
+            _target_url = await url.get()
+            parsed_response = await self.crawl(method=method, url=_target_url)
+            handled_data = await self.data_handler.process(result=parsed_response)
+
+
+    def run(self, method: str, url: Union[List[str], Queue], retry: int = 1, lock: bool = True, sema_value: int = 1) -> Optional:
+        feature = MultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
+
+        if type(url) is list:
+            urls_list_collection = MultiRunnableCrawler._divide_urls(urls=url, executor_number=self.__executor_number)
+            self.__executor.run(
+                function=self.process_with_list,
+                args={"method": method, "url": urls_list_collection, "retry": retry},
+                queue_tasks=None,
+                features=feature)
+        else:
+            self.__executor.run(
+                function=self.process_with_queue,
+                args={"method": method, "url": url, "retry": retry},
+                queue_tasks=None,
+                features=feature)
+
+        result = self.__executor.result()
+        return result
 
 
 
 class PoolCrawler(MultiRunnableCrawler):
 
-    def __init__(self, mode, pool_size, tasks_size):
+    def __init__(self, mode: RunningMode, pool_size: int, tasks_size: int):
         super(PoolCrawler, self).__init__()
         self.__pool = SimplePool(mode=mode, pool_size=pool_size, tasks_size=tasks_size)
 
