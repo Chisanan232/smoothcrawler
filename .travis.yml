@@ -22,8 +22,14 @@ install:
   - pip install -r requirements.txt
 
 script:
-  - pytest    # run tests
+  - cd ..
+  - pwd
+  - echo $CODECOV_TOKEN
+  - pytest    # run tests via Python testing framework 'pytest'
+#  - coverage run --source=./smoothcrawler -m pytest    # run via coverage
 
 after_success:
-  - codecov    # submit coverage
+#  - codecov    # submit coverage
+#  - coveralls    # submit coverage to coveralls
+  - codecov -t $CODECOV_TOKEN    # submit coverage to codecov
 
