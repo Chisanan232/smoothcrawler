@@ -7,7 +7,9 @@ python:
   - 3.10
 
 notifications:
-  email: true
+  email:
+   recipients:
+      - bulls23mj1991@gmail.com
 
 before_install:
   - python --version
