@@ -20,6 +20,7 @@ before_install:
 
 install:
   - pip install "requests"    # install package + test dependencies
+  - pip install "beautifulsoup4"
   - pip install -r requirements.txt
 
 script:
