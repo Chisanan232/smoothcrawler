@@ -1,0 +1,6 @@
+[run]
+source=
+    ./smoothcrawler
+
+omit =
+    */__init__.py
