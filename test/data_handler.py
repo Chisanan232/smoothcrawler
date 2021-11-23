@@ -8,6 +8,7 @@ from requests import Response
 
 
 Test_URL = "https://www.google.com"
+Test_URL_TW_Stock = "https://www.twse.com.tw/exchangeReport/STOCK_DAY_AVG?response=json&date=20210801&stockNo=2330"
 
 Handled_HTTP_200_Response_Flag = False
 Handled_HTTP_Not_200_Response_Flag = False
@@ -21,39 +22,58 @@ def send_http_request(url: str) -> Union[Response, HTTPResponse]:
 
 class _MyHTTPResponseParser(BaseHTTPResponseParser):
 
-    def get_status_code(self) -> int:
-        return int(self._HTTPResponse.status)
+    def get_status_code(self, response) -> int:
+        return int(response.status)
 
 
-    def handle_http_200_response(self) -> Any:
+    def handling_200_response(self, response) -> Any:
         global Handled_HTTP_200_Response_Flag
         Handled_HTTP_200_Response_Flag = True
-        return super(_MyHTTPResponseParser, self).handle_http_200_response()
+        return super(_MyHTTPResponseParser, self).handling_200_response(response)
 
 
-    def handle_http_not_200_response(self) -> Any:
+    def handling_not_200_response(self, response) -> Any:
         global Handled_HTTP_Not_200_Response_Flag
         Handled_HTTP_Not_200_Response_Flag = True
-        return super(_MyHTTPResponseParser, self).handle_http_not_200_response()
+        return super(_MyHTTPResponseParser, self).handling_not_200_response(response)
 
 
 
 class _Not200HTTPResponseParser(BaseHTTPResponseParser):
 
-    def get_status_code(self) -> int:
+    def get_status_code(self, response) -> int:
         return 300
 
 
-    def handle_http_200_response(self) -> Any:
+    def handling_200_response(self, response) -> Any:
         global Handled_HTTP_200_Response_Flag
         Handled_HTTP_200_Response_Flag = True
-        return super(_Not200HTTPResponseParser, self).handle_http_200_response()
+        return super(_Not200HTTPResponseParser, self).handling_200_response(response)
 
 
-    def handle_http_not_200_response(self) -> Any:
+    def handling_not_200_response(self, response) -> Any:
         global Handled_HTTP_Not_200_Response_Flag
         Handled_HTTP_Not_200_Response_Flag = True
-        return super(_Not200HTTPResponseParser, self).handle_http_not_200_response()
+        return super(_Not200HTTPResponseParser, self).handling_not_200_response(response)
+
+
+class _MyStockHTTPResponseParser(BaseHTTPResponseParser):
+
+    def get_status_code(self, response) -> int:
+        return int(response.status)
+
+
+    def handling_200_response(self, response) -> Any:
+        global Handled_HTTP_200_Response_Flag
+        Handled_HTTP_200_Response_Flag = True
+        data = response.data.decode('utf-8')
+        return super(_MyStockHTTPResponseParser, self).handling_200_response(response)
+
+
+    def handling_not_200_response(self, response) -> Any:
+        global Handled_HTTP_Not_200_Response_Flag
+        Handled_HTTP_Not_200_Response_Flag = True
+        return super(_MyStockHTTPResponseParser, self).handling_not_200_response(response)
 
 
 
@@ -94,12 +114,12 @@ class TestHTTPResponseParser(BaseHTTPResponseParserTestSpec):
         TestHTTPResponseParser._init_flag()
 
         response = send_http_request(url=Test_URL)
-        parser = _MyHTTPResponseParser(response=response)
-        status_code = parser.get_status_code()
+        parser = _MyHTTPResponseParser()
+        status_code = parser.get_status_code(response=response)
         assert status_code == response.status, \
             "These 2 objects should be the same so that the attribute value also the same."
 
-        handled_response = parser.parse_content()
+        handled_response = parser.parse_content(response=response)
         assert Handled_HTTP_200_Response_Flag == True, \
             "It should run the method 'handle_http_200_response' if you don't override it."
         assert Handled_HTTP_Not_200_Response_Flag == False, \
@@ -110,8 +130,8 @@ class TestHTTPResponseParser(BaseHTTPResponseParserTestSpec):
 
     def test_get_http_status_code(self):
         response = send_http_request(url=Test_URL)
-        parser = _MyHTTPResponseParser(response=response)
-        status_code = parser.get_status_code()
+        parser = _MyHTTPResponseParser()
+        status_code = parser.get_status_code(response=response)
         assert status_code == 200, "It should be a HTTP response object with HTTP status code."
         assert status_code == response.status, \
             "These 2 objects should be the same so that the attribute value also the same."
