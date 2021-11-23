@@ -13,7 +13,3 @@ class DataPersistenceLayer(metaclass=ABCMeta):
         pass
 
 
-    @abstractmethod
-    def save(self, data) -> None:
-        pass
-
