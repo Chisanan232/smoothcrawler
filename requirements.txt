@@ -1,1 +1,1 @@
-multirunnable
+multirunnable==0.15.2rc1
