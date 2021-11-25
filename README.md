@@ -4,6 +4,12 @@
 [![Release](https://img.shields.io/github/release/Chisanan232/smoothcrawler.svg?label=Release&sort=semver)](https://github.com/Chisanan232/smoothcrawler/releases)
 [![PyPI version](https://badge.fury.io/py/smoothcrawler.svg)](https://badge.fury.io/py/smoothcrawler)
 [![Supported Versions](https://img.shields.io/pypi/pyversions/smoothcrawler.svg?logo=python&logoColor=FBE072)](https://pypi.org/project/smoothcrawler)
+[![Coverage Status](https://coveralls.io/repos/github/Chisanan232/smoothcrawler/badge.svg)](https://coveralls.io/github/Chisanan232/smoothcrawler)
+[![codecov](https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT)](https://codecov.io/gh/Chisanan232/smoothcrawler)
+
+| Linux/MacOS | Windows |
+|------------|--------|
+|[![Build Status](https://app.travis-ci.com/Chisanan232/smoothcrawler.svg?branch=master)](https://app.travis-ci.com/Chisanan232/smoothcrawler)|[![Build status](https://ci.appveyor.com/api/projects/status/1eri78jtxvu5r0q2?svg=true)](https://ci.appveyor.com/project/Chisanan232/smoothcrawler)|
 
 A Python package for building software architecture of crawler humanly.
 <hr>
