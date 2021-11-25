@@ -80,18 +80,21 @@ skip_commits:
 
 install:
 #  - "%PYTHON%\\python.exe -m pip install . -r requirements.txt"
+  - "%PYTHON%\\python.exe -m pip install pytest"
+  - "%PYTHON%\\python.exe -m pip install pytest-cov"
+  - "%PYTHON%\\python.exe -m pip install codecov"
   - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
 
 #cache:
 #  - "%TMP%\\py\\"
 #  - '%LOCALAPPDATA%\pip\Cache -> appveyor.yml,setup.py'
 
-build_script:
-  # Build the compiled extension
-  # Try to get some things that don't wind up in the pip cache as
-  # built wheels if they're built during an isolated build.
-  - "%CMD_IN_ENV% %PYEXE% -m pip install -U wheel cython setuptools cffi"
-  - if not "%GWHEEL_ONLY%"=="true" %PYEXE% -m pip install -U -e .[test]
+#build_script:
+#  # Build the compiled extension
+#  # Try to get some things that don't wind up in the pip cache as
+#  # built wheels if they're built during an isolated build.
+#  - "%CMD_IN_ENV% %PYEXE% -m pip install -U wheel cython setuptools cffi"
+#  - if not "%GWHEEL_ONLY%"=="true" %PYEXE% -m pip install -U -e .[test]
 
 #test_script:
 #  # Run the project tests
