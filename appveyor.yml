@@ -83,6 +83,8 @@ install:
   - "%PYTHON%\\python.exe -m pip install pytest"
   - "%PYTHON%\\python.exe -m pip install pytest-cov"
   - "%PYTHON%\\python.exe -m pip install codecov"
+  - "%PYTHON%\\python.exe -m pip install requests"
+  - "%PYTHON%\\python.exe -m pip install beautifulsoup4"
   - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
 
 #cache:
