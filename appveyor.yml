@@ -1,6 +1,6 @@
 # The VS 2019 image doesn't have
 # the MSVC needed for Python 2.7.
-image: Visual Studio 2022
+#image: Visual Studio 2022
 
 environment:
   matrix:
@@ -96,8 +96,12 @@ install:
 #  - "%CMD_IN_ENV% %PYEXE% -m pip install -U wheel cython setuptools cffi"
 #  - if not "%GWHEEL_ONLY%"=="true" %PYEXE% -m pip install -U -e .[test]
 
-#test_script:
-#  # Run the project tests
+build:
+  off
+
+test_script:
+  # Run the project tests
+  - "%PYTHON%\\python.exe -m pytest"
 #  - if not "%GWHEEL_ONLY%"=="true" %PYEXE% -c "import greenlet; print(greenlet, greenlet.__version__)"
 #  - if not "%GWHEEL_ONLY%"=="true" %PYEXE% -c "import gevent.core; print(gevent.core.loop)"
 #  - if not "%GWHEEL_ONLY%"=="true" %PYEXE% -c "import gevent; print(gevent.config.settings['resolver'].get_options())"
@@ -105,7 +109,7 @@ install:
 #  - if not "%GWHEEL_ONLY%"=="true" %PYEXE% -mgevent.tests --second-chance --config known_failures.py --quiet
 
 after_test:
-  - "%PYTHON%\\python.exe -m pytest"
+  - codecov -t $CODECOV_TOKEN
 
 #artifacts:
 #  # Archive the generated wheel package in the ci.appveyor.com build report.
