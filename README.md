@@ -12,7 +12,6 @@
 |[![Build Status](https://app.travis-ci.com/Chisanan232/smoothcrawler.svg?branch=master)](https://app.travis-ci.com/Chisanan232/smoothcrawler)|[![Build status](https://ci.appveyor.com/api/projects/status/1eri78jtxvu5r0q2?svg=true)](https://ci.appveyor.com/project/Chisanan232/smoothcrawler)|
 
 A Python package for building software architecture of crawler humanly.
-<hr>
 
 [Overview](#overview) | [Quickly Start](#quickly-start) | [Flow](#flow) | [Usage](#usage) | [Code Example](https://github.com/Chisanan232/smoothcrawler/tree/master/example)
 <hr>
