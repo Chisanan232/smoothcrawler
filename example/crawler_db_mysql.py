@@ -20,19 +20,19 @@ class MySQLSingleConnection(SingleConnection):
         return super(MySQLSingleConnection, self).connection
 
 
-    # @connection.setter
-    # def connection(self, conn: MySQLConnection) -> None:
-    #     super(MySQLSingleConnection, self).connection = conn
-    #
-    #
-    # @property
-    # def cursor(self) -> MySQLCursor:
-    #     return super(MySQLSingleConnection, self).cursor
-    #
-    #
-    # @cursor.setter
-    # def cursor(self, cur: MySQLCursor) -> None:
-    #     super(MySQLSingleConnection, self).cursor = cur
+    @connection.setter
+    def connection(self, conn: MySQLConnection) -> None:
+        super(MySQLSingleConnection, self).connection = conn
+
+
+    @property
+    def cursor(self) -> MySQLCursor:
+        return super(MySQLSingleConnection, self).cursor
+
+
+    @cursor.setter
+    def cursor(self, cur: MySQLCursor) -> None:
+        super(MySQLSingleConnection, self).cursor = cur
 
 
     def connect_database(self, **kwargs) -> MySQLConnection:
@@ -61,9 +61,8 @@ class MySQLSingleConnection(SingleConnection):
 
 class MySQLDriverConnectionPool(ConnectionPool):
 
-    @property
-    def database_connection_pool(self) -> MySQLConnectionPool:
-        return super(MySQLDriverConnectionPool, self).database_connection_pool()
+    def get_database_conn_pool(self, name: str = "") -> MySQLConnectionPool:
+        return super(MySQLDriverConnectionPool, self).get_database_conn_pool()
 
 
     @property
@@ -95,11 +94,11 @@ class MySQLDriverConnectionPool(ConnectionPool):
         while True:
             try:
                 # return self.database_connection_pool.get_connection()
-                __connection = self.database_connection_pool.get_connection()
+                __connection = self.get_database_conn_pool.get_connection()
                 logging.info(f"Get a valid connection: {__connection}")
                 return __connection
             except PoolError as e:
-                logging.error(f"Connection Pool: {self.database_connection_pool.pool_size} ")
+                logging.error(f"Connection Pool: {self.get_database_conn_pool.pool_size} ")
                 logging.error(f"Will sleep for 5 seconds to wait for connection is available. - {self.getName()}")
                 time.sleep(5)
 
@@ -114,7 +113,7 @@ class MySQLDriverConnectionPool(ConnectionPool):
 
 
     def close_pool(self) -> None:
-        self.database_connection_pool.close()
+        self.get_database_conn_pool.close()
 
 
     def close(self) -> None:
