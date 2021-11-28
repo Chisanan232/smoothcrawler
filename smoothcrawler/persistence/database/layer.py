@@ -35,6 +35,6 @@ class CrawlerDao(DatabaseAccessObject):
         return self.database_opt.fetch_many(size=size)
 
 
-    def close(self) -> Optional[Generic[T]]:
+    def close(self) -> Generic[T]:
         return self.database_opt.close()
 
