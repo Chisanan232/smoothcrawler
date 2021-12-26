@@ -11,9 +11,6 @@ jobs:
     steps:
       - checkout    # this pulls code down from GitHub
       - run:
-         name: Test MySQL connection
-         command: mysql -u root -h 127.0.0.1 -ppassword
-      - run:
          name: Check Python Version
          command: python --version
       - run:
