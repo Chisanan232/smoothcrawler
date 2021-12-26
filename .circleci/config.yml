@@ -33,7 +33,11 @@ commands:
 executors:
   docker-executors:
     docker:
+      - image: circleci/python:3.6
       - image: circleci/python:3.7
+      - image: circleci/python:3.8
+      - image: circleci/python:3.9
+      - image: circleci/python:3.10
 
 
 jobs:
