@@ -1,13 +1,7 @@
 version: 2.1
 
-jobs:
-  linux-python37:    # This is first job --- pytest task with Python 3.7.
-    docker:
-      - image: circleci/python:3.7
-#         auth:
-#           username: chisanan232
-#           password: $DOCKERHUB_PASSWORD
-    # Steps are a list of commands to run inside the docker container above.
+command:
+  python_test:
     steps:
       - checkout    # this pulls code down from GitHub
       - run:
@@ -34,6 +28,20 @@ jobs:
 #             coveralls    # submit coverage to coveralls
          command: |
              codecov -t $CODECOV_TOKEN    # submit coverage to codecov
+
+
+executors:
+  docker-executors:
+    docker:
+      - images: circleci/python:3.7
+
+
+jobs:
+  linux-python37:    # This is first job --- pytest task with Python 3.7.
+    executor: docker-executors
+    steps:
+      - python_test
+
 
 # Under the workflows: map, we can coordinate above jobs, defined above.
 workflows:
