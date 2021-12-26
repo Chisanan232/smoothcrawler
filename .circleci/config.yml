@@ -54,19 +54,19 @@ jobs:
     steps:
       - python_test
   linux-python37:    # This is first job --- pytest task with Python 3.7.
-    executor: docker-executors-py37
+    executor: docker-executor-py37
     steps:
       - python_test
   linux-python38:    # This is first job --- pytest task with Python 3.8.
-    executor: docker-executors-py38
+    executor: docker-executor-py38
     steps:
       - python_test
   linux-python39:    # This is first job --- pytest task with Python 3.9.
-    executor: docker-executors-py39
+    executor: docker-executor-py39
     steps:
       - python_test
   linux-python310:    # This is first job --- pytest task with Python 3.10.
-    executor: docker-executors-py310
+    executor: docker-executor-py310
     steps:
       - python_test
 
