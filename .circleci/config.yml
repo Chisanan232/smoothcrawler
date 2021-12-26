@@ -1,6 +1,6 @@
 version: 2.1
 
-command:
+commands:
   python_test:
     steps:
       - checkout    # this pulls code down from GitHub
