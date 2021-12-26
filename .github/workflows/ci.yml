@@ -1,4 +1,4 @@
-name: Run Python Tests
+name: smoothcrawler testing
 on:
   push:
     branches:
@@ -32,6 +32,13 @@ jobs:
 
       - name: Run tests with pytest
         run: pytest
+
+      - name: Get secret token from base64
+        env:
+          KEYSTORE_BASE64: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          echo import certificate from secrets and regenerate the file
+          echo $KEYSTORE_BASE64 | base64 -d > $CODECOV_TOKEN
 
       - name: Submit calculation result of testing coverage of project code to codecov
         run: codecov -t $CODECOV_TOKEN    # submit coverage to codecov
