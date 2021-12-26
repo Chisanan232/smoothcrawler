@@ -1,0 +1,38 @@
+name: Run Python Tests
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U pip
+          pip install -U pytest
+          pip install -U pytest-cov
+          pip install codecov
+          pip install pytest-rerunfailures
+          pip install requests
+          pip install beautifulsoup4
+          pip install -r requirements.txt
+
+      - name: Run tests with pytest
+        run: pytest
+
+      - name: Submit calculation result of testing coverage of project code to codecov
+        run: codecov -t $CODECOV_TOKEN    # submit coverage to codecov
+
