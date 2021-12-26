@@ -10,14 +10,6 @@ jobs:
     # Steps are a list of commands to run inside the docker container above.
     steps:
       - checkout    # this pulls code down from GitHub
-      - attach_workspace:
-         at: ~/smoothcrawler
-      - run:
-         name: Get where I'm
-         command: pwd
-      - run:
-         name: Get what I have
-         command: ls -la
       - run:
          name: Check Python Version
          command: python --version
@@ -31,7 +23,7 @@ jobs:
              pip install pytest-rerunfailures
              pip install requests
              pip install beautifulsoup4
-             pip install -r dev-requirements.txt
+             pip install -r requirements.txt
       - run:
          name: Run PyTest command to test
          command: |
