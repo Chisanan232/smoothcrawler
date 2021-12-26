@@ -31,18 +31,42 @@ commands:
 
 
 executors:
-  docker-executors:
+  docker-executor-py36:
     docker:
       - image: circleci/python:3.6
+  docker-executor-py37:
+    docker:
       - image: circleci/python:3.7
+  docker-executor-py38:
+    docker:
       - image: circleci/python:3.8
+  docker-executor-py39:
+    docker:
       - image: circleci/python:3.9
+  docker-executor-py310:
+    docker:
       - image: circleci/python:3.10
 
 
 jobs:
+  linux-python36:    # This is first job --- pytest task with Python 3.6.
+    executor: docker-executor-py36
+    steps:
+      - python_test
   linux-python37:    # This is first job --- pytest task with Python 3.7.
-    executor: docker-executors
+    executor: docker-executors-py37
+    steps:
+      - python_test
+  linux-python38:    # This is first job --- pytest task with Python 3.8.
+    executor: docker-executors-py38
+    steps:
+      - python_test
+  linux-python39:    # This is first job --- pytest task with Python 3.9.
+    executor: docker-executors-py39
+    steps:
+      - python_test
+  linux-python310:    # This is first job --- pytest task with Python 3.10.
+    executor: docker-executors-py310
     steps:
       - python_test
 
@@ -52,5 +76,9 @@ workflows:
   version: 2.1
   build_and_test:    # this is the name of our workflow
     jobs:    # and here we list the jobs we are going to run.
+      - linux-python36
       - linux-python37
+      - linux-python38
+      - linux-python39
+      - linux-python310
 
