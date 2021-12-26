@@ -11,7 +11,13 @@ jobs:
     steps:
       - checkout    # this pulls code down from GitHub
       - attach_workspace:
-         at: .
+         at: ~/smoothcrawler
+      - run:
+         name: Get where I'm
+         command: pwd
+      - run:
+         name: Get what I have
+         command: ls -la
       - run:
          name: Check Python Version
          command: python --version
