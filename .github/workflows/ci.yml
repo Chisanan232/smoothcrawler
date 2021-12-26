@@ -10,10 +10,10 @@ on:
 jobs:
   build:
 #    runs-on: ubuntu-latest
-    runs-on: ${{ metrics.os }}
+    runs-on: ${{ matrix.os }}
 
     strategy:
-      matixs:
+      matrix:
         python-version: [3.6,3.7,3.8,3.9,'3.10.0']
         os: [ubuntu-18.04,ubuntu-latest,macos-latest]
         exclude:
