@@ -10,6 +10,8 @@ jobs:
     # Steps are a list of commands to run inside the docker container above.
     steps:
       - checkout    # this pulls code down from GitHub
+      - attach_workspace:
+         at: .
       - run:
          name: Check Python Version
          command: python --version
