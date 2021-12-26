@@ -9,14 +9,40 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+#    runs-on: ubuntu-latest
+    runs-on: ${{ metrics.os }}
+
+    strategy:
+      matixs:
+        python-version: [3.6,3.7,3.8,3.9,'3.10.0']
+        os: [ubuntu-18.04,ubuntu-latest,macos-latest]
+        exclude:
+          - os: 3.6
+             python-version: ubuntu-18.04
+          - os: 3.9
+             python-version: ubuntu-18.04
+          - os: "3.10.0"
+             python-version: ubuntu-18.04
+          - os: 3.8
+             python-version: ubuntu-latest
+          - os: 3.9
+             python-version: ubuntu-latest
+          - os: "3.10.0"
+             python-version: ubuntu-latest
+          - os: 3.6
+             python-version: macos-latest
+          - os: 3.9
+             python-version: macos-latest
+          - os: "3.10.0"
+             python-version: macos-latest
+
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Python 3.7
-        uses: actions/setup-python@v1
+      - name: Install Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: ${{ matrix.python-version }}
 
       - name: Install Python dependencies
         run: |
