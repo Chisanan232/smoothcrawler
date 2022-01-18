@@ -59,21 +59,19 @@ Note:
 
 """
 
-from smoothcrawler.persistence.database import DatabaseAccessObject
-from smoothcrawler.persistence.file import (
-    FileAccessObject, SavingMediator, SavingStrategy,
-    FileSaver, JSONFormatter, CSVFormatter, XLSXFormatter,
-    ArchiverSaver, ZIPArchiver)
+from smoothcrawler.persistence.database import BaseCrawlerDao
+from smoothcrawler.persistence.file import BaseCrawlerFao, SavingStrategy, SavingMediator
 
 from crawler_db_mysql import MySQLSingleConnection, MySQLDriverConnectionPool, MySQLOperator
 
 from mysql.connector import MySQLConnection, errorcode
 from mysql.connector.errors import DatabaseError, PoolError
 from typing import List, Tuple, Dict, Union
+import re
 
 
 
-class StockDao(DatabaseAccessObject):
+class StockDao(BaseCrawlerDao):
 
     __Stock_Table_Name: str = "stock_data_"
     __Database_Config: Dict[str, str] = {}
@@ -81,19 +79,29 @@ class StockDao(DatabaseAccessObject):
     def __init__(self, use_pool: bool = False, **kwargs):
         super().__init__(**kwargs)
         self._use_pool = use_pool
-        self.__database_connection = None
+        # self.__database_connection = None
         self.__database_opt = None
+
+        # self._database_opts = None
+        self._database_config = {
+            "host": "127.0.0.1",
+            # "host": "172.17.0.6",
+            "port": "3306",
+            "user": "root",
+            "password": "password",
+            "database": "tw_stock"
+        }
 
 
     @property
     def database_opt(self) -> MySQLOperator:
-        if self.__database_connection is None or self.__database_opt is None:
+        if self.__database_opt is None:
             if self._use_pool is True:
-                self.__database_connection = MySQLDriverConnectionPool(**self.__Database_Config)
+                __database_connection = MySQLDriverConnectionPool(**self._database_config)
             else:
-                self.__database_connection = MySQLSingleConnection(**self.__Database_Config)
+                __database_connection = MySQLSingleConnection(**self._database_config)
             # self.__db_connection = conn_strategy.connection
-            return MySQLOperator(conn_strategy=self.__database_connection)
+            self.__database_opt = MySQLOperator(conn_strategy=__database_connection)
         return self.__database_opt
 
 
@@ -106,7 +114,7 @@ class StockDao(DatabaseAccessObject):
         sql = f"SELECT table_name FROM information_schema.tables " \
               f"WHERE table_schema = '{database}';"
 
-        self.database_opt.execute(sql)
+        self.execute(sql)
         tables = list(self.database_opt.fetch_all())
         return [t[0] for t in tables]
 
@@ -126,8 +134,8 @@ class StockDao(DatabaseAccessObject):
                   PRIMARY KEY(stock_date)) DEFAULT CHARSET=UTF8MB4"
 
         try:
-            self.database_opt.execute(sql)
-            self.__database_connection.commit()
+            self.execute(sql)
+            self.database_opt._connection.commit()
         except DatabaseError as e:
             if e.errno == errorcode.ER_TABLE_EXISTS_ERROR:
                 return True
@@ -148,7 +156,7 @@ class StockDao(DatabaseAccessObject):
         sql = f"SELECT {columns} FROM {table}"
 
         ## Method 1
-        return self.database_opt.execute(sql)
+        return self.execute(sql)
         # self.__Database_Cursor.execute(sql)
         ## Method 2
         # return self.__Database_Cursor.fetchall()
@@ -178,8 +186,8 @@ class StockDao(DatabaseAccessObject):
 
         sql = f"INSERT INTO {table} ({columns}) VALUES ({data})"
 
-        self.database_opt.execute(sql)
-        self.__database_connection.commit()
+        self.execute(sql)
+        self.database_opt._connection.commit()
 
 
     def batch_insert(self, table: str, columns: List[str], data: List[tuple]) -> None:
@@ -192,45 +200,25 @@ class StockDao(DatabaseAccessObject):
         sql = f"INSERT INTO {table} ({sql_columns}) VALUES ({sql_data_values})"
 
         self.database_opt.execute_many(sql, data)
-        self.__database_connection.commit()
+        self.database_opt._connection.commit()
 
 
 
-class StockFao(FileAccessObject):
+class StockFao(BaseCrawlerFao):
 
     def __init__(self, strategy: SavingStrategy, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(strategy=strategy, **kwargs)
         self.__mediator = SavingMediator()
         self.__strategy = strategy
 
 
-    def save_as_json(self, file: str, mode: str, data: List[list]):
-        file_saver = FileSaver(file=JSONFormatter())
-        file_saver.register(mediator=self.__mediator, strategy=self.__strategy)
-        result = file_saver.save(file=file, mode=mode, data=data)
-        return result
-
-
-    def save_as_csv(self, file: str, mode: str, data: List[list]):
-        file_saver = FileSaver(file=CSVFormatter())
-        file_saver.register(mediator=self.__mediator, strategy=self.__strategy)
-        result = file_saver.save(file=file, mode=mode, data=data)
-        return result
-
-
-    def save_as_excel(self, file: str, mode: str, data: List[list]):
-        file_saver = FileSaver(file=XLSXFormatter())
-        file_saver.register(mediator=self.__mediator, strategy=self.__strategy)
-        result = file_saver.save(file=file, mode=mode, data=data)
-        return result
-
-
-    def compress_as_zip(self, file: str, mode: str, data: List):
-        if self.__strategy is not SavingStrategy.ONE_THREAD_ONE_FILE_AND_COMPRESS_ALL:
-            raise ValueError("The compress process only work with strategy 'ONE_THREAD_ONE_FILE_AND_COMPRESS_ALL'.")
-
-        archiver_saver = ArchiverSaver(archiver=ZIPArchiver())
-        archiver_saver.register(mediator=self.__mediator, strategy=self.__strategy)
-        archiver_saver.compress(file=file, mode=mode, data=data)
-
+    def save(self, formatter: str, file: str, mode: str, data):
+        if re.search(r"csv", formatter, re.IGNORECASE) is not None:
+            self.save_as_csv(file=file, mode=mode, data=data)
+        elif re.search(r"xlsx", formatter, re.IGNORECASE) or re.search(r"excel", formatter, re.IGNORECASE):
+            self.save_as_excel(file=file, mode=mode, data=data)
+        elif re.search(r"json", formatter, re.IGNORECASE):
+            self.save_as_json(file=file, mode=mode, data=data)
+        else:
+            raise ValueError(f"It doesn't support the file format '{formatter}'.")
 

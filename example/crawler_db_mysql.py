@@ -1,7 +1,7 @@
-from smoothcrawler.persistence.database.strategy import BaseDatabaseConnection
-from smoothcrawler.persistence.database import SingleConnection, ConnectionPool, DatabaseOperator
+from multirunnable.persistence.database.operator import T
+from smoothcrawler.persistence.database import get_connection_pool, BaseCrawlerSingleConnection, BaseCrawlerConnectionPool, BaseCrawlerDatabaseOperator, BaseCrawlerDao
 
-from typing import Any, Tuple, cast
+from typing import Any, Tuple, cast, Union, Generic
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.pooling import MySQLConnectionPool, PooledMySQLConnection
 from mysql.connector.errors import PoolError
@@ -13,35 +13,15 @@ import os
 
 
 
-class MySQLSingleConnection(SingleConnection):
+class MySQLSingleConnection(BaseCrawlerSingleConnection):
 
     @property
     def connection(self) -> MySQLConnection:
-        return super(MySQLSingleConnection, self).connection
-
-
-    @connection.setter
-    def connection(self, conn: MySQLConnection) -> None:
-        super(MySQLSingleConnection, self).connection = conn
-
-
-    @property
-    def cursor(self) -> MySQLCursor:
-        return super(MySQLSingleConnection, self).cursor
-
-
-    @cursor.setter
-    def cursor(self, cur: MySQLCursor) -> None:
-        super(MySQLSingleConnection, self).cursor = cur
+        return self._database_connection
 
 
     def connect_database(self, **kwargs) -> MySQLConnection:
-        return mysql.connector.connect(**self._Database_Config)
-
-
-    def build_cursor(self) -> MySQLCursor:
-        self.cursor = self.connection.cursor()
-        return self.cursor
+        return mysql.connector.connect(**kwargs)
 
 
     def commit(self) -> None:
@@ -50,8 +30,6 @@ class MySQLSingleConnection(SingleConnection):
 
     def close(self) -> None:
         if self.connection is not None and self.connection.is_connected():
-            if self.cursor is not None:
-                self.cursor.close()
             self.connection.close()
             logging.info(f"MySQL connection is closed. - PID: {os.getpid()}")
         else:
@@ -59,67 +37,34 @@ class MySQLSingleConnection(SingleConnection):
 
 
 
-class MySQLDriverConnectionPool(ConnectionPool):
-
-    def get_database_conn_pool(self, name: str = "") -> MySQLConnectionPool:
-        return super(MySQLDriverConnectionPool, self).get_database_conn_pool()
-
-
-    @property
-    def connection(self) -> PooledMySQLConnection:
-        return super(MySQLDriverConnectionPool, self).connection
-
-
-    @connection.setter
-    def connection(self, conn: PooledMySQLConnection) -> None:
-        super(MySQLDriverConnectionPool, self).connection = conn
-
-
-    @property
-    def cursor(self) -> MySQLCursor:
-        return super(MySQLDriverConnectionPool, self).cursor
-
-
-    @cursor.setter
-    def cursor(self, cur: MySQLCursor) -> None:
-        super(MySQLDriverConnectionPool, self).cursor = cur
-
+class MySQLDriverConnectionPool(BaseCrawlerConnectionPool):
 
     def connect_database(self, **kwargs) -> MySQLConnectionPool:
-        connection_pool = MySQLConnectionPool(**self._Database_Config)
+        connection_pool = MySQLConnectionPool(**kwargs)
         return connection_pool
 
 
-    def get_one_connection(self) -> PooledMySQLConnection:
+    def get_one_connection(self, pool_name: str = "", **kwargs) -> PooledMySQLConnection:
         while True:
             try:
-                # return self.database_connection_pool.get_connection()
-                __connection = self.get_database_conn_pool.get_connection()
+                __connection = get_connection_pool(pool_name=pool_name).get_connection()
                 logging.info(f"Get a valid connection: {__connection}")
                 return __connection
             except PoolError as e:
-                logging.error(f"Connection Pool: {self.get_database_conn_pool.pool_size} ")
                 logging.error(f"Will sleep for 5 seconds to wait for connection is available. - {self.getName()}")
                 time.sleep(5)
 
 
-    def build_cursor(self) -> MySQLCursor:
-        self.cursor = self.connection.cursor()
-        return self.cursor
-
-
     def commit(self) -> None:
         self.connection.commit()
 
 
-    def close_pool(self) -> None:
-        self.get_database_conn_pool.close()
+    def close_pool(self, pool_name: str) -> None:
+        get_connection_pool(pool_name=pool_name).close()
 
 
     def close(self) -> None:
         if self.connection is not None and self.connection.is_connected():
-            if self.cursor is not None:
-                self.cursor.close()
             self.connection.close()
             logging.info(f"MySQL connection is closed. - PID: {os.getpid()}")
         else:
@@ -127,52 +72,55 @@ class MySQLDriverConnectionPool(ConnectionPool):
 
 
 
-class MySQLOperator(DatabaseOperator):
-    
-    def __init__(self, conn_strategy: BaseDatabaseConnection):
-        super(MySQLOperator, self).__init__(conn_strategy=conn_strategy)
-        self.__cursor: MySQLCursor = conn_strategy.cursor
+class MySQLOperator(BaseCrawlerDatabaseOperator):
+
+    def __init__(self, conn_strategy: Union[BaseCrawlerSingleConnection, BaseCrawlerConnectionPool], db_config={}):
+        super(MySQLOperator, self).__init__(conn_strategy=conn_strategy, db_config=db_config)
+
+
+    def initial_cursor(self, connection: Union[MySQLConnection, PooledMySQLConnection]) -> MySQLCursor:
+        return connection.cursor(buffered=True)
 
 
     @property
     def column_names(self) -> MySQLCursor:
-        return self.__cursor.column_names
+        return self._cursor.column_names
 
 
     @property
     def row_count(self) -> MySQLCursor:
-        return self.__cursor.rowcount
+        return self._cursor.rowcount
 
 
     def next(self) -> MySQLCursor:
-        return self.__cursor.next()
+        return self._cursor.next()
 
 
     def execute(self, operator: Any, params: Tuple = None, multi: bool = False) -> MySQLCursor:
-        return self.__cursor.execute(operation=operator, params=params, multi=multi)
+        return self._cursor.execute(operation=operator, params=params, multi=multi)
 
 
     def execute_many(self, operator: Any, seq_params=None) -> MySQLCursor:
-        return self.__cursor.executemany(operation=operator, seq_params=seq_params)
+        return self._cursor.executemany(operation=operator, seq_params=seq_params)
 
 
     def fetch(self) -> MySQLCursor:
-        return self.__cursor.fetch()
+        return self._cursor.fetch()
 
 
     def fetch_one(self) -> MySQLCursor:
-        return self.__cursor.fetchone()
+        return self._cursor.fetchone()
 
 
     def fetch_many(self, size: int = None) -> MySQLCursor:
-        return self.__cursor.fetchmany(size=size)
+        return self._cursor.fetchmany(size=size)
 
 
     def fetch_all(self) -> MySQLCursor:
-        return self.__cursor.fetch_all()
+        return self._cursor.fetch_all()
 
 
     def reset(self) -> None:
-        self.__cursor.reset()
+        self._cursor.reset()
 
 
