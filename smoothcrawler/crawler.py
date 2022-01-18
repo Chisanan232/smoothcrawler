@@ -420,21 +420,3 @@ class PoolCrawler(MultiRunnableCrawler):
     def close(self) -> None:
         self.__pool.close()
 
-
-
-class CrazyCrawler(MultiRunnableCrawler):
-
-    def __init__(self):
-        super(CrazyCrawler, self).__init__()
-
-        # Get the resource info of the running environment
-        mode = RunningMode.Parallel
-        pool_size = 1
-        tasks_size = 1
-        SimplePool(mode=mode, pool_size=pool_size, tasks_size=tasks_size)
-
-
-    def run(self, method: str, url: str, retry: int = 1) -> Optional:
-        pass
-
-
