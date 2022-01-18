@@ -1,5 +1,3 @@
-import logging
-
 from smoothcrawler.httpio import (
     set_retry as _set_retry,
     BaseHTTP as _BaseHttpIo,
@@ -9,22 +7,19 @@ from smoothcrawler.data import (
     BaseHTTPResponseParser as _BaseHTTPResponseParser,
     BaseDataHandler as _BaseDataHandler
 )
-from smoothcrawler.persistence.file import PersistenceFacade as _PersistenceFacade
-
-from multirunnable.framework import OceanResult
-from multirunnable.adapter import Lock, BoundedSemaphore
-from multirunnable import (
-    RunningMode,
-    SimpleExecutor,
-    PersistenceExecutor,
-    SimplePool,
-    PersistencePool
-)
+from smoothcrawler.persistence import PersistenceFacade as _PersistenceFacade
 
 from abc import ABCMeta, abstractmethod
 from queue import Queue
 from typing import List, Iterable, Any, Union, Optional, Deque, Sequence
+from multirunnable import (
+    RunningMode,
+    SimpleExecutor,
+    SimplePool
+)
+from multirunnable.adapter import Lock, BoundedSemaphore
 from multipledispatch import dispatch
+import logging
 
 
 
@@ -123,6 +118,11 @@ class SimpleCrawler(BaseCrawler):
             data = self.data_handler.process(result=parsed_response)
             result.append(data)
         return result
+
+
+    def run_and_save(self, method: str, url: Union[str, list]) -> None:
+        _result = self.run(method, url)
+        self.persistence.save(data=_result)
 
 
 
@@ -234,7 +234,8 @@ class ExecutorCrawler(MultiRunnableCrawler):
                 logging.warning(f"It will have some idle executors deosn't be activated because target URLs amount more than executor number.")
                 logging.warning(f"URLs amount: {urls_len}")
                 logging.warning(f"Executor number: {self.__executor_number}")
-                self.map(method=method, url=url, retry=retry, lock=lock, sema_value=sema_value)
+                _result = self.map(method=method, url=url, retry=retry, lock=lock, sema_value=sema_value)
+                return _result
             else:
                 urls_list_collection = MultiRunnableCrawler._divide_urls(urls=url, executor_number=self.__executor_number)
 
@@ -380,15 +381,15 @@ class PoolCrawler(MultiRunnableCrawler):
         self.__pool.initial(queue_tasks=None, features=feature)
 
 
-    def apply(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
-        _kwargs = {"method": method, "url": url, "retry": retry, "file": file}
+    def apply(self, method: str, url: str, retry: int = 1) -> Optional:
+        _kwargs = {"method": method, "url": url, "retry": retry}
         self.__pool.apply(function=self.crawl, **_kwargs)
         result = self.__pool.get_result()
         return result
 
 
-    def async_apply(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
-        _kwargs = {"method": method, "url": url, "retry": retry, "file": file}
+    def async_apply(self, method: str, url: str, retry: int = 1) -> Optional:
+        _kwargs = {"method": method, "url": url, "retry": retry}
         self.__pool.async_apply(
             function=self.crawl,
             kwargs=_kwargs,
@@ -398,15 +399,15 @@ class PoolCrawler(MultiRunnableCrawler):
         return result
 
 
-    def map(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
-        _kwargs = {"method": method, "url": url, "retry": retry, "file": file}
+    def map(self, method: str, url: str, retry: int = 1) -> Optional:
+        _kwargs = {"method": method, "url": url, "retry": retry}
         self.__pool.map(function=self.crawl, **_kwargs)
         result = self.__pool.get_result()
         return result
 
 
-    def async_map(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
-        _kwargs = {"method": method, "url": url, "retry": retry, "file": file}
+    def async_map(self, method: str, url: str, retry: int = 1) -> Optional:
+        _kwargs = {"method": method, "url": url, "retry": retry}
         self.__pool.async_map(function=self.crawl, **_kwargs)
         result = self.__pool.get_result()
         return result
@@ -433,7 +434,7 @@ class CrazyCrawler(MultiRunnableCrawler):
         SimplePool(mode=mode, pool_size=pool_size, tasks_size=tasks_size)
 
 
-    def run(self, method: str, url: str, retry: int = 1, file: str = "") -> Optional:
+    def run(self, method: str, url: str, retry: int = 1) -> Optional:
         pass
 
 
