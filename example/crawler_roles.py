@@ -14,19 +14,26 @@ sys.path.append(smoothcrawler_path)
 print("multirunnable: ", multirunnable_path)
 
 
-from smoothcrawler.crawler import RunAsParallel, RunAsConcurrent, RunAsCoroutine, SimpleCrawler, ExecutorCrawler, PoolCrawler
-from smoothcrawler.factory import CrawlerFactory
+from smoothcrawler.crawler import RunAsParallel, RunAsConcurrent, RunAsCoroutine, SimpleCrawler, AsyncSimpleCrawler, ExecutorCrawler, PoolCrawler
+from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 from smoothcrawler.components.httpio import set_retry
 from smoothcrawler.urls import URL
 from smoothcrawler.persistence.file import SavingStrategy
 
-from crawler_components import MyRetry, StockHTTPRequest, StockHTTPResponseParser, StockDataHandler, StockDataPersistenceLayer
+from crawler_components import (
+    MyRetry, StockHTTPRequest,
+    StockAsyncHTTPRequest,
+    StockHTTPResponseParser,
+    StockAsyncHTTPResponseParser,
+    StockDataHandler,
+    StockAsyncDataHandler,
+    StockDataPersistenceLayer)
 from crawler_layer import StockDao, StockFao
 
 
 HTTP_METHOD = "GET"
 Test_URL_TW_Stock = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210801&stockNo=2330"
-Test_URL_TW_Stock_With_Option = "https://www.twse.com.tw/exchangeReport/STOCK_DAY_AVG?response=json&date={date}&stockNo=2330"
+Test_URL_TW_Stock_With_Option = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={date}&stockNo=2330"
 
 _database_config = {
     "host": "127.0.0.1",
@@ -46,6 +53,11 @@ _cf.http_factory = StockHTTPRequest(retry_components=MyRetry())
 _cf.parser_factory = StockHTTPResponseParser()
 _cf.data_handling_factory = StockDataHandler()
 
+_acf = AsyncCrawlerFactory()
+_acf.http_factory = StockAsyncHTTPRequest()
+_acf.parser_factory = StockAsyncHTTPResponseParser()
+_acf.data_handling_factory = StockAsyncDataHandler()
+
 
 def run_as_simple_crawler():
     _cf.persistence_factory = StockDataPersistenceLayer()
@@ -58,6 +70,23 @@ def run_as_simple_crawler():
 
     sc.run_and_save("GET", Test_URL_TW_Stock)
     # _Stock_Fao.save(formatter="csv", file="/Users/bryantliu/Downloads/stock_crawler_2330.csv", mode="a+", data=data)
+
+
+
+def run_as_async_simple_crawler():
+    # Crawler Role: Simple Crawler
+    sc = AsyncSimpleCrawler(factory=_acf, executors=2)
+
+    url = URL(base=Test_URL_TW_Stock_With_Option, start="20210801", end="20211001", formatter="yyyymmdd")
+    url.set_period(days=31, hours=0, minutes=0, seconds=0)
+    target_urls = url.generate()
+    print(f"Target URLs: {target_urls}")
+
+    data = sc.run("GET", target_urls)
+    print(f"[DEBUG] data: {data}")
+
+    # sc.run_and_save("GET", Test_URL_TW_Stock)
+    # # _Stock_Fao.save(formatter="csv", file="/Users/bryantliu/Downloads/stock_crawler_2330.csv", mode="a+", data=data)
 
 
 
@@ -98,11 +127,14 @@ if __name__ == '__main__':
     set_retry(3)
     print("Set retry times.")
 
-    print("++++++++++++++ Simple Crawler ++++++++++++++++++")
-    run_as_simple_crawler()
+    # print("++++++++++++++ Simple Crawler ++++++++++++++++++")
+    # run_as_simple_crawler()
 
-    # print("++++++++++++++ Executor Crawler ++++++++++++++++++")
-    # run_as_executor_crawler()
+    # print("++++++++++++++ Async Simple Crawler ++++++++++++++++++")
+    # run_as_async_simple_crawler()
+
+    print("++++++++++++++ Executor Crawler ++++++++++++++++++")
+    run_as_executor_crawler()
 
     # print("++++++++++++++ Pool Crawler ++++++++++++++++++")
     # run_as_pool_crawler()
