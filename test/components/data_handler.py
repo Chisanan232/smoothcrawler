@@ -1,6 +1,5 @@
-from smoothcrawler.data import BaseHTTPResponseParser, BaseDataHandler
+from smoothcrawler.components.data import BaseHTTPResponseParser, BaseDataHandler
 
-from bs4 import BeautifulSoup
 from abc import ABCMeta, abstractmethod
 from typing import Union, Any
 from urllib3 import PoolManager, HTTPResponse

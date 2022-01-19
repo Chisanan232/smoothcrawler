@@ -1,14 +1,4 @@
-# # Import package multirunnable
-import pathlib
-import sys
-import os
-
-package_multirunnable_path = str(pathlib.Path(__file__).absolute().parent.parent.parent)
-final_path = os.path.join(package_multirunnable_path, "apache-multirunnable")
-sys.path.append(final_path)
-
-
-from smoothcrawler.httpio import BaseHTTP, HTTP, AsyncHTTP, set_retry, RetryComponent
+from smoothcrawler.components.httpio import BaseHTTP, HTTP, AsyncHTTP, set_retry, RetryComponent
 from abc import ABCMeta, abstractmethod
 import urllib3
 import logging
