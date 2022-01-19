@@ -14,9 +14,9 @@ sys.path.append(smoothcrawler_path)
 print("multirunnable: ", multirunnable_path)
 
 
-from smoothcrawler import RunningMode
-from smoothcrawler.crawler import SimpleCrawler, ExecutorCrawler, PoolCrawler
-from smoothcrawler.httpio import set_retry
+from smoothcrawler.crawler import RunAsParallel, RunAsConcurrent, RunAsCoroutine, SimpleCrawler, ExecutorCrawler, PoolCrawler
+from smoothcrawler.factory import CrawlerFactory
+from smoothcrawler.components.httpio import set_retry
 from smoothcrawler.urls import URL
 from smoothcrawler.persistence.file import SavingStrategy
 
@@ -41,16 +41,21 @@ _Stock_Fao = StockFao(strategy=SavingStrategy.ONE_THREAD_ONE_FILE)
 _Stock_Dao = StockDao(**_database_config)
 
 
+_cf = CrawlerFactory()
+_cf.http_factory = StockHTTPRequest(retry_components=MyRetry())
+_cf.parser_factory = StockHTTPResponseParser()
+_cf.data_handling_factory = StockDataHandler()
+
+
 def run_as_simple_crawler():
+    _cf.persistence_factory = StockDataPersistenceLayer()
+
     # Crawler Role: Simple Crawler
-    sc = SimpleCrawler()
-    sc.http_io = StockHTTPRequest(retry_components=MyRetry())
-    sc.http_response_parser = StockHTTPResponseParser()
-    sc.data_handler = StockDataHandler()
+    sc = SimpleCrawler(factory=_cf)
+
     # data = sc.run("GET", Test_URL_TW_Stock)
     # print(f"[DEBUG] data: {data}")
 
-    sc.persistence = StockDataPersistenceLayer()
     sc.run_and_save("GET", Test_URL_TW_Stock)
     # _Stock_Fao.save(formatter="csv", file="/Users/bryantliu/Downloads/stock_crawler_2330.csv", mode="a+", data=data)
 
@@ -58,14 +63,13 @@ def run_as_simple_crawler():
 
 def run_as_executor_crawler():
     # Crawler Role: Executor Crawler
-    sc = ExecutorCrawler(mode=RunningMode.Concurrent, executors=3)
-    sc.http_io = StockHTTPRequest(retry_components=MyRetry())
-    sc.http_response_parser = StockHTTPResponseParser()
-    sc.data_handler = StockDataHandler()
+    sc = ExecutorCrawler(factory=_cf, mode=RunAsParallel, executors=3)
+
     url = URL(base=Test_URL_TW_Stock_With_Option, start="20210801", end="20211001", formatter="yyyymmdd")
     url.set_period(days=31, hours=0, minutes=0, seconds=0)
     target_urls = url.generate()
     print(f"Target URLs: {target_urls}")
+
     data = sc.run(method="GET", url=target_urls, lock=False, sema_value=3)
     print(f"[DEBUG] data: {data}")
     for d in data:
@@ -79,11 +83,7 @@ def run_as_executor_crawler():
 
 def run_as_pool_crawler():
     # # Crawler Role: Pool Crawler
-    with PoolCrawler(mode=RunningMode.Parallel, pool_size=5, tasks_size=3) as pc:
-        pc.http_io = StockHTTPRequest(retry_components=MyRetry())
-        pc.http_response_parser = StockHTTPResponseParser()
-        pc.data_handler = StockDataHandler()
-
+    with PoolCrawler(factory=_cf, mode=RunAsParallel, pool_size=5, tasks_size=3) as pc:
         pc.init(lock=False, sema_value=3)
         data = pc.async_apply(method="GET", url=Test_URL_TW_Stock)
         print(f"[DEBUG] data: {data}")
