@@ -10,13 +10,13 @@ from smoothcrawler.crawler import (
     PoolCrawler,
     RunAsParallel, RunAsConcurrent, RunAsCoroutine)
 from smoothcrawler.urls import URL
-from smoothcrawler.factory import CrawlerFactory
+from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 
 from ._components import (
     MyRetry,
-    StockHTTPRequest,
-    StockHTTPResponseParser,
-    StockDataHandler,
+    StockHTTPRequest, StockAsyncHTTPRequest,
+    StockHTTPResponseParser, StockAsyncHTTPResponseParser,
+    StockDataHandler, StockAsyncDataHandler,
     StockDataFilePersistenceLayer,
     StockDataDatabasePersistenceLayer)
 
@@ -74,18 +74,22 @@ class TestAsyncSimpleCrawler(BaseCrawlerTestSpec):
 
     @pytest.fixture
     def crawler(self) -> BaseCrawler:
-        _cf = CrawlerFactory()
-        _cf.http_factory = StockHTTPRequest(retry_components=MyRetry())
-        _cf.parser_factory = StockHTTPResponseParser()
-        _cf.data_handling_factory = StockDataHandler()
+        _acf = AsyncCrawlerFactory()
+        _acf.http_factory = StockAsyncHTTPRequest()
+        _acf.parser_factory = StockAsyncHTTPResponseParser()
+        _acf.data_handling_factory = StockAsyncDataHandler()
 
-        _sc = AsyncSimpleCrawler(factory=_cf, executors=3)
+        _sc = AsyncSimpleCrawler(factory=_acf, executors=3)
         return _sc
 
 
-    @pytest.mark.skip(reason="[AsyncSimpleCrawler] It doesn't finish testing logic.")
     def test_run(self, crawler: AsyncSimpleCrawler):
-        result = crawler.run()
+        url = URL(base=Test_URL_TW_Stock_With_Option, start="20210801", end="20211001", formatter="yyyymmdd")
+        url.set_period(days=31, hours=0, minutes=0, seconds=0)
+        target_urls = url.generate()
+
+        result = crawler.run("GET", target_urls)
+        assert result is not None, f"It should get some data finally."
 
 
 
