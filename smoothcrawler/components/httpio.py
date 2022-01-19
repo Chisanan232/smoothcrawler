@@ -1,8 +1,7 @@
-from multirunnable.api import retry as _retry, async_retry as _async_retry
-
 from abc import ABCMeta, abstractmethod
 from types import MethodType, FunctionType, CoroutineType
 from typing import Callable, Coroutine, Optional, Union, Type, Any
+from multirunnable.api import retry as _retry, async_retry as _async_retry
 import re
 
 
