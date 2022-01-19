@@ -2,7 +2,13 @@ from abc import ABCMeta, abstractmethod
 from typing import TypeVar, Generic
 import pytest
 
-from smoothcrawler.crawler import BaseCrawler, SimpleCrawler, AsyncSimpleCrawler, ExecutorCrawler, PoolCrawler, RunningMode
+from smoothcrawler.crawler import (
+    BaseCrawler,
+    SimpleCrawler,
+    AsyncSimpleCrawler,
+    ExecutorCrawler,
+    PoolCrawler,
+    RunAsParallel, RunAsConcurrent, RunAsCoroutine)
 from smoothcrawler.urls import URL
 from smoothcrawler.factory import CrawlerFactory
 
@@ -77,11 +83,6 @@ class TestAsyncSimpleCrawler(BaseCrawlerTestSpec):
         return _sc
 
 
-    @pytest.mark.skip(reason="")
-    def test_factory(self, crawler: Generic[T]):
-        pass
-
-
     @pytest.mark.skip(reason="[AsyncSimpleCrawler] It doesn't finish testing logic.")
     def test_run(self, crawler: AsyncSimpleCrawler):
         result = crawler.run()
@@ -97,7 +98,7 @@ class TestExecutorCrawler(BaseCrawlerTestSpec):
         _cf.parser_factory = StockHTTPResponseParser()
         _cf.data_handling_factory = StockDataHandler()
 
-        _sc = ExecutorCrawler(factory=_cf, mode=RunningMode.Concurrent, executors=3)
+        _sc = ExecutorCrawler(factory=_cf, mode=RunAsParallel, executors=3)
         return _sc
 
 
@@ -120,7 +121,7 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
         _cf.parser_factory = StockHTTPResponseParser()
         _cf.data_handling_factory = StockDataHandler()
 
-        _sc = PoolCrawler(factory=_cf, mode=RunningMode.Parallel, pool_size=5, tasks_size=3)
+        _sc = PoolCrawler(factory=_cf, mode=RunAsParallel, pool_size=5, tasks_size=3)
         return _sc
 
 
