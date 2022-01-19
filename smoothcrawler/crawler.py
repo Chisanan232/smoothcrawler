@@ -1,9 +1,10 @@
-from smoothcrawler.httpio import (
+from smoothcrawler.factory import CrawlerFactory
+from smoothcrawler.components.httpio import (
     set_retry as _set_retry,
     BaseHTTP as _BaseHttpIo,
     BaseRetryComponent as _BaseRetryComponent
 )
-from smoothcrawler.data import (
+from smoothcrawler.components.data import (
     BaseHTTPResponseParser as _BaseHTTPResponseParser,
     BaseDataHandler as _BaseDataHandler
 )
@@ -30,63 +31,8 @@ class BaseCrawler(metaclass=ABCMeta):
     _Data_Handler: _BaseDataHandler = None
     _Persistence: _PersistenceFacade = None
 
-    def __init__(self):
-        self._file = None
-        self._mode = None
-
-        self._db_host = None
-        self._db_port = None
-        self._db_user = None
-        self._db_password = None
-        self._db_database = None
-
-
-    @property
-    def http_io(self) -> _BaseHttpIo:
-        if self._HTTP_IO is None:
-            raise ValueError("Factory 'HTTP_IO' can not be empty.")
-        return self._HTTP_IO
-
-
-    @http_io.setter
-    def http_io(self, http_io) -> None:
-        self._HTTP_IO = http_io
-
-
-    @property
-    def http_response_parser(self) -> _BaseHTTPResponseParser:
-        if self._HTTP_Response_Parser is None:
-            raise ValueError("Factory 'HTTP_Response_Parser' can not be empty.")
-        return self._HTTP_Response_Parser
-
-
-    @http_response_parser.setter
-    def http_response_parser(self, parser) -> None:
-        self._HTTP_Response_Parser = parser
-
-
-    @property
-    def data_handler(self) -> _BaseDataHandler:
-        if self._Data_Handler is None:
-            raise ValueError("Factory 'Data_Handler' can not be empty.")
-        return self._Data_Handler
-
-
-    @data_handler.setter
-    def data_handler(self, data_handler) -> None:
-        self._Data_Handler = data_handler
-
-
-    @property
-    def persistence(self) -> _PersistenceFacade:
-        if self._Persistence is None:
-            raise ValueError("Factory 'Persistence' can not be empty.")
-        return self._Persistence
-
-
-    @persistence.setter
-    def persistence(self, persistence) -> None:
-        self._Persistence = persistence
+    def __init__(self, factory: CrawlerFactory):
+        self._factory = factory
 
 
     def crawl(self,
@@ -95,8 +41,8 @@ class BaseCrawler(metaclass=ABCMeta):
               retry: int = 1,
               *args, **kwargs) -> Any:
         _set_retry(times=retry)
-        response = self.http_io.request(method=method, url=url, *args, **kwargs)
-        parsed_response = self.http_response_parser.parse_content(response=response)
+        response = self._factory.http_factory.request(method=method, url=url, *args, **kwargs)
+        parsed_response = self._factory.parser_factory.parse_content(response=response)
         return parsed_response
 
 
@@ -106,7 +52,7 @@ class SimpleCrawler(BaseCrawler):
     @dispatch(str, str)
     def run(self, method: str, url: str) -> Optional[Any]:
         parsed_response = self.crawl(method=method, url=url)
-        data = self.data_handler.process(result=parsed_response)
+        data = self._factory.data_handling_factory.process(result=parsed_response)
         return data
 
 
@@ -115,14 +61,14 @@ class SimpleCrawler(BaseCrawler):
         result = []
         for _target_url in url:
             parsed_response = self.crawl(method=method, url=_target_url)
-            data = self.data_handler.process(result=parsed_response)
+            data = self._factory.data_handling_factory.process(result=parsed_response)
             result.append(data)
         return result
 
 
     def run_and_save(self, method: str, url: Union[str, list]) -> None:
         _result = self.run(method, url)
-        self.persistence.save(data=_result)
+        self._factory.persistence_factory.save(data=_result)
 
 
 
@@ -158,7 +104,7 @@ class MultiRunnableCrawler(BaseCrawler):
         _set_retry(times=retry)
         for _target_url in url:
             parsed_response = self.crawl(method=method, url=_target_url)
-            handled_data = self.data_handler.process(result=parsed_response)
+            handled_data = self._factory.data_handling_factory.process(result=parsed_response)
 
 
     def process_with_queue(self,
@@ -180,7 +126,7 @@ class MultiRunnableCrawler(BaseCrawler):
         while url.empty() is False:
             _target_url = url.get()
             parsed_response = self.crawl(method=method, url=_target_url)
-            handled_data = self.data_handler.process(result=parsed_response)
+            handled_data = self._factory.data_handling_factory.process(result=parsed_response)
 
 
     @staticmethod
@@ -219,8 +165,8 @@ class MultiRunnableCrawler(BaseCrawler):
 
 class ExecutorCrawler(MultiRunnableCrawler):
 
-    def __init__(self, mode: RunningMode, executors: int):
-        super(ExecutorCrawler, self).__init__()
+    def __init__(self, mode: RunningMode, executors: int, factory: CrawlerFactory):
+        super(ExecutorCrawler, self).__init__(factory=factory)
         self.__executor_number = executors
         self.__executor = SimpleExecutor(mode=mode, executors=executors)
 
@@ -271,8 +217,8 @@ class ExecutorCrawler(MultiRunnableCrawler):
 
 class AsyncSimpleCrawler(MultiRunnableCrawler):
 
-    def __init__(self, executors: int):
-        super(AsyncSimpleCrawler, self).__init__()
+    def __init__(self, executors: int, factory: CrawlerFactory):
+        super(AsyncSimpleCrawler, self).__init__(factory=factory)
         self.__executor_number = executors
         self.__executor = SimpleExecutor(mode=RunningMode.Asynchronous, executors=executors)
 
@@ -283,8 +229,8 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
                     retry: int = 1,
                     *args, **kwargs) -> Any:
         _set_retry(times=retry)
-        response = await self.http_io.request(method=method, url=url, *args, **kwargs)
-        parsed_response = await self.http_response_parser.parse_content(response=response)
+        response = await self._factory.http_factory.request(method=method, url=url, *args, **kwargs)
+        parsed_response = await self._factory.parser_factory.parse_content(response=response)
         return parsed_response
 
 
@@ -306,7 +252,7 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
         _set_retry(times=retry)
         for _target_url in url:
             parsed_response = await self.crawl(method=method, url=_target_url)
-            handled_data = await self.data_handler.process(result=parsed_response)
+            handled_data = await self._factory.data_handling_factory.process(result=parsed_response)
 
 
     async def process_with_queue(self,
@@ -328,7 +274,7 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
         while url.empty() is False:
             _target_url = await url.get()
             parsed_response = await self.crawl(method=method, url=_target_url)
-            handled_data = await self.data_handler.process(result=parsed_response)
+            handled_data = await self._factory.data_handling_factory.process(result=parsed_response)
 
 
     def run(self, method: str, url: Union[List[str], Queue], retry: int = 1, lock: bool = True, sema_value: int = 1) -> Optional:
@@ -355,8 +301,8 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
 
 class PoolCrawler(MultiRunnableCrawler):
 
-    def __init__(self, mode: RunningMode, pool_size: int, tasks_size: int):
-        super(PoolCrawler, self).__init__()
+    def __init__(self, mode: RunningMode, pool_size: int, tasks_size: int, factory: CrawlerFactory):
+        super(PoolCrawler, self).__init__(factory=factory)
         self.__pool = SimplePool(mode=mode, pool_size=pool_size, tasks_size=tasks_size)
 
 
