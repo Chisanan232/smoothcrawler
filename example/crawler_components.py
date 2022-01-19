@@ -1,5 +1,5 @@
-from smoothcrawler.data import BaseHTTPResponseParser, BaseDataHandler
-from smoothcrawler.httpio import HTTP, RetryComponent
+from smoothcrawler.components.data import BaseHTTPResponseParser, BaseDataHandler
+from smoothcrawler.components.httpio import HTTP, RetryComponent
 from smoothcrawler.persistence import PersistenceFacade
 from smoothcrawler.persistence.file import SavingStrategy
 from typing import Any
