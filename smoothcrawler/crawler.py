@@ -1,4 +1,4 @@
-from smoothcrawler.factory import CrawlerFactory
+from smoothcrawler.factory import BaseFactory, CrawlerFactory, AsyncCrawlerFactory
 from smoothcrawler.components.httpio import (
     set_retry as _set_retry,
     BaseHTTP as _BaseHttpIo
@@ -34,7 +34,7 @@ class BaseCrawler(metaclass=ABCMeta):
     _Data_Handler: _BaseDataHandler = None
     _Persistence: _PersistenceFacade = None
 
-    def __init__(self, factory: CrawlerFactory):
+    def __init__(self, factory: BaseFactory):
         self._factory = factory
 
 
@@ -105,9 +105,12 @@ class MultiRunnableCrawler(BaseCrawler):
         :return:
         """
         _set_retry(times=retry)
+        _handled_data = []
         for _target_url in url:
             parsed_response = self.crawl(method=method, url=_target_url)
-            handled_data = self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data_row = self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data.append(_handled_data_row)
+        return _handled_data
 
 
     def process_with_queue(self,
@@ -126,10 +129,13 @@ class MultiRunnableCrawler(BaseCrawler):
         :return:
         """
         _set_retry(times=retry)
+        _handled_data = []
         while url.empty() is False:
             _target_url = url.get()
             parsed_response = self.crawl(method=method, url=_target_url)
-            handled_data = self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data_row = self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data.append(_handled_data_row)
+        return _handled_data
 
 
     @staticmethod
@@ -220,7 +226,7 @@ class ExecutorCrawler(MultiRunnableCrawler):
 
 class AsyncSimpleCrawler(MultiRunnableCrawler):
 
-    def __init__(self, executors: int, factory: CrawlerFactory):
+    def __init__(self, executors: int, factory: AsyncCrawlerFactory):
         super(AsyncSimpleCrawler, self).__init__(factory=factory)
         self.__executor_number = executors
         self.__executor = SimpleExecutor(mode=RunningMode.Asynchronous, executors=executors)
@@ -253,9 +259,12 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
         :return:
         """
         _set_retry(times=retry)
+        _handled_data = []
         for _target_url in url:
             parsed_response = await self.crawl(method=method, url=_target_url)
-            handled_data = await self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data_row = await self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data.append(_handled_data_row)
+        return _handled_data
 
 
     async def process_with_queue(self,
@@ -274,22 +283,42 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
         :return:
         """
         _set_retry(times=retry)
+        _handled_data = []
         while url.empty() is False:
             _target_url = await url.get()
             parsed_response = await self.crawl(method=method, url=_target_url)
-            handled_data = await self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data_row = await self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data.append(_handled_data_row)
+        return _handled_data
+
+
+    def map(self, method: str, url: List[str], retry: int = 1, lock: bool = True, sema_value: int = 1) -> Optional:
+        feature = MultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
+        args_iterator = [{"method": method, "url": _url, "retry": retry} for _url in url]
+
+        self.__executor.map(
+            function=self.crawl,
+            args_iter=args_iterator,
+            queue_tasks=None,
+            features=feature)
+        result = self.__executor.result()
+        return result
 
 
     def run(self, method: str, url: Union[List[str], Queue], retry: int = 1, lock: bool = True, sema_value: int = 1) -> Optional:
         feature = MultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
 
         if type(url) is list:
-            urls_list_collection = MultiRunnableCrawler._divide_urls(urls=url, executor_number=self.__executor_number)
-            self.__executor.run(
-                function=self.process_with_list,
-                args={"method": method, "url": urls_list_collection, "retry": retry},
-                queue_tasks=None,
-                features=feature)
+            _url_len = len(url)
+            if _url_len <= self.__executor_number:
+                return self.map(method=method, url=url, retry=retry, lock=lock, sema_value=sema_value)
+            else:
+                urls_list_collection = MultiRunnableCrawler._divide_urls(urls=url, executor_number=self.__executor_number)
+                self.__executor.run(
+                    function=self.process_with_list,
+                    args={"method": method, "url": urls_list_collection, "retry": retry},
+                    queue_tasks=None,
+                    features=feature)
         else:
             self.__executor.run(
                 function=self.process_with_queue,
