@@ -39,8 +39,8 @@ class BaseCrawler(metaclass=ABCMeta):
 
 
     def crawl(self,
-              url: str,
               method: str,
+              url: str,
               retry: int = 1,
               *args, **kwargs) -> Any:
         _set_retry(times=retry)
@@ -172,58 +172,6 @@ class MultiRunnableCrawler(BaseCrawler):
 
 
 
-class ExecutorCrawler(MultiRunnableCrawler):
-
-    def __init__(self, mode: RunningMode, executors: int, factory: CrawlerFactory):
-        super(ExecutorCrawler, self).__init__(factory=factory)
-        self.__executor_number = executors
-        self.__executor = SimpleExecutor(mode=mode, executors=executors)
-
-
-    def run(self, method: str, url: Union[List[str], Queue], retry: int = 1, lock: bool = True, sema_value: int = 1) -> Optional:
-        feature = MultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
-
-        if type(url) is list:
-            urls_len = len(url)
-            if urls_len <= self.__executor_number:
-                logging.warning(f"It will have some idle executors deosn't be activated because target URLs amount more than executor number.")
-                logging.warning(f"URLs amount: {urls_len}")
-                logging.warning(f"Executor number: {self.__executor_number}")
-                _result = self.map(method=method, url=url, retry=retry, lock=lock, sema_value=sema_value)
-                return _result
-            else:
-                urls_list_collection = MultiRunnableCrawler._divide_urls(urls=url, executor_number=self.__executor_number)
-
-                self.__executor.run(
-                    function=self.process_with_list,
-                    args={"method": method, "url": urls_list_collection, "retry": retry},
-                    queue_tasks=None,
-                    features=feature)
-        else:
-            self.__executor.run(
-                function=self.process_with_queue,
-                args={"method": method, "url": url, "retry": retry},
-                queue_tasks=None,
-                features=feature)
-
-        result = self.__executor.result()
-        return result
-
-
-    def map(self, method: str, url: List[str], retry: int = 1, lock: bool = True, sema_value: int = 1) -> Optional:
-        feature = MultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
-        args_iterator = [{"method": method, "url": _url, "retry": retry} for _url in url]
-
-        self.__executor.map(
-            function=self.crawl,
-            args_iter=args_iterator,
-            queue_tasks=None,
-            features=feature)
-        result = self.__executor.result()
-        return result
-
-
-
 class AsyncSimpleCrawler(MultiRunnableCrawler):
 
     def __init__(self, executors: int, factory: AsyncCrawlerFactory):
@@ -331,6 +279,58 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
 
 
 
+class ExecutorCrawler(MultiRunnableCrawler):
+
+    def __init__(self, mode: RunningMode, executors: int, factory: CrawlerFactory):
+        super(ExecutorCrawler, self).__init__(factory=factory)
+        self.__executor_number = executors
+        self.__executor = SimpleExecutor(mode=mode, executors=executors)
+
+
+    def run(self, method: str, url: Union[List[str], Queue], retry: int = 1, lock: bool = True, sema_value: int = 1) -> Optional:
+        feature = MultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
+
+        if type(url) is list:
+            urls_len = len(url)
+            if urls_len <= self.__executor_number:
+                logging.warning(f"It will have some idle executors deosn't be activated because target URLs amount more than executor number.")
+                logging.warning(f"URLs amount: {urls_len}")
+                logging.warning(f"Executor number: {self.__executor_number}")
+                _result = self.map(method=method, url=url, retry=retry, lock=lock, sema_value=sema_value)
+                return _result
+            else:
+                urls_list_collection = MultiRunnableCrawler._divide_urls(urls=url, executor_number=self.__executor_number)
+
+                self.__executor.run(
+                    function=self.process_with_list,
+                    args={"method": method, "url": urls_list_collection, "retry": retry},
+                    queue_tasks=None,
+                    features=feature)
+        else:
+            self.__executor.run(
+                function=self.process_with_queue,
+                args={"method": method, "url": url, "retry": retry},
+                queue_tasks=None,
+                features=feature)
+
+        result = self.__executor.result()
+        return result
+
+
+    def map(self, method: str, url: List[str], retry: int = 1, lock: bool = True, sema_value: int = 1) -> Optional:
+        feature = MultiRunnableCrawler._get_lock_feature(lock=lock, sema_value=sema_value)
+        args_iterator = [{"method": method, "url": _url, "retry": retry} for _url in url]
+
+        self.__executor.map(
+            function=self.crawl,
+            args_iter=args_iterator,
+            queue_tasks=None,
+            features=feature)
+        result = self.__executor.result()
+        return result
+
+
+
 class PoolCrawler(MultiRunnableCrawler):
 
     def __init__(self, mode: RunningMode, pool_size: int, tasks_size: int, factory: CrawlerFactory):
@@ -361,7 +361,7 @@ class PoolCrawler(MultiRunnableCrawler):
 
     def apply(self, method: str, url: str, retry: int = 1) -> Optional:
         _kwargs = {"method": method, "url": url, "retry": retry}
-        self.__pool.apply(function=self.crawl, **_kwargs)
+        self.__pool.apply(function=self.crawl, kwargs=_kwargs)
         result = self.__pool.get_result()
         return result
 
@@ -377,16 +377,20 @@ class PoolCrawler(MultiRunnableCrawler):
         return result
 
 
-    def map(self, method: str, url: str, retry: int = 1) -> Optional:
-        _kwargs = {"method": method, "url": url, "retry": retry}
-        self.__pool.map(function=self.crawl, **_kwargs)
+    def map(self, method: str, urls: List[str], retry: int = 1) -> Optional:
+        _arguments = [(method, _url, retry) for _url in urls]
+        self.__pool.map_by_args(function=self.crawl, args_iter=_arguments)
         result = self.__pool.get_result()
         return result
 
 
-    def async_map(self, method: str, url: str, retry: int = 1) -> Optional:
-        _kwargs = {"method": method, "url": url, "retry": retry}
-        self.__pool.async_map(function=self.crawl, **_kwargs)
+    def async_map(self, method: str, urls: List[str], retry: int = 1) -> Optional:
+        _arguments = [(method, _url, retry) for _url in urls]
+        self.__pool.async_map_by_args(
+            function=self.crawl,
+            args_iter=_arguments,
+            callback=None,
+            error_callback=None)
         result = self.__pool.get_result()
         return result
 
