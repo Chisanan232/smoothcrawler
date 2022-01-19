@@ -1,13 +1,3 @@
-# # Import package multirunnable
-import datetime
-import pathlib
-import sys
-import os
-
-package_multirunnable_path = str(pathlib.Path(__file__).absolute().parent.parent.parent)
-final_path = os.path.join(package_multirunnable_path, "apache-multirunnable")
-sys.path.append(final_path)
-
 from smoothcrawler import URL
 from datetime import datetime, date, timedelta
 import pytest
