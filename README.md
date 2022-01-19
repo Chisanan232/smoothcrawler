@@ -1,109 +1,141 @@
 # smoothcrawler
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Supported Versions](https://img.shields.io/pypi/pyversions/smoothcrawler.svg?logo=python&logoColor=FBE072)](https://pypi.org/project/smoothcrawler)
 [![Release](https://img.shields.io/github/release/Chisanan232/smoothcrawler.svg?label=Release&sort=semver)](https://github.com/Chisanan232/smoothcrawler/releases)
 [![PyPI version](https://badge.fury.io/py/smoothcrawler.svg)](https://badge.fury.io/py/smoothcrawler)
-[![Supported Versions](https://img.shields.io/pypi/pyversions/smoothcrawler.svg?logo=python&logoColor=FBE072)](https://pypi.org/project/smoothcrawler)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 | OS | Building Status | Coverage Status |
 |------------|------------|--------|
-| Linux |[![Build Status](https://app.travis-ci.com/Chisanan232/smoothcrawler.svg?branch=master)](https://app.travis-ci.com/Chisanan232/smoothcrawler)|[![codecov](https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT)](https://codecov.io/gh/Chisanan232/smoothcrawler)|
+| Linux |[![Build Status](https://app.travis-ci.com/Chisanan232/smoothcrawler.svg?branch=master)](https://app.travis-ci.com/Chisanan232/smoothcrawler)|Deprecated|
 | Linux |[![CircleCI](https://circleci.com/gh/Chisanan232/smoothcrawler.svg?style=shield)](https://app.circleci.com/pipelines/github/Chisanan232/smoothcrawler)|[![codecov](https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT)](https://codecov.io/gh/Chisanan232/smoothcrawler)|
 | Linux/MacOS |[![Run Python Tests](https://github.com/Chisanan232/smoothcrawler/actions/workflows/ci.yml/badge.svg)](https://github.com/Chisanan232/smoothcrawler/actions/workflows/ci.yml)|[![codecov](https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT)](https://codecov.io/gh/Chisanan232/smoothcrawler)|
 | Windows |[![Build status](https://ci.appveyor.com/api/projects/status/1eri78jtxvu5r0q2?svg=true)](https://ci.appveyor.com/project/Chisanan232/smoothcrawler)|[![Coverage Status](https://coveralls.io/repos/github/Chisanan232/smoothcrawler/badge.svg)](https://coveralls.io/github/Chisanan232/smoothcrawler)|
 
-A Python package for building software architecture of crawler humanly.
+A Python package for building crawler humanly as different roles.
 
-[Overview](#overview) | [Quickly Start](#quickly-start) | [Flow](#flow) | [Usage](#usage) | [Code Example](https://github.com/Chisanan232/smoothcrawler/tree/master/example)
+[Overview](#overview) | [Quickly Start](#quickly-start) | [Code Example](https://github.com/Chisanan232/smoothcrawler/tree/master/example)
 <hr>
 
 
 ## Overview
 
 Implementing web crawler in Python is very easy and simple. It already has many frameworks or libraries to do it.
-However, they focus on one point. It means that they have their responsibility to face different things.
-For HTTP, you must think about *urllib* or *requests*; For parsing HTTP response, *Beautiful Soup*. A framework to do it, *scrapy* or *selenium*.
-How about a library to build a crawler **software architecture**?
-Think about it, every crawler should do mostly same things and procedures:
+However, they focus on one point. It means that they all have their own responsibility to face different things.
+For HTTP, you must think about *urllib3* or *requests*; For parsing HTTP response, *Beautiful Soup*. A framework to do it, *scrapy* or *selenium*.
+How about a library to build a **crawler system**?
 
-    send HTTP request -> get HTTP response and parse it -> handle data if it's needed -> persistence process
+Every crawler should do mostly same things and procedures:
 
-It could implement and run a crawler via writing script, doesn't need to develop a **program**.
-Of course, it can do that. Sometimes, it just is needed once so that it's not necessary to thinking more and more concerns like maintaining, extending or something else.
+    send HTTP request -> get HTTP response and parse it -> handle data if it's necessary -> persistence process
+
+In general, a crawler code usually be used 1 or 2 times. It even could implement and run the code via writing script. 
+That's the reason why it doesn't need to develop a **program** for crawler, much less maintain the crawler program (for example, web element locations will be your nightmare) or change requirement.
+
+_smoothcrawler_ like LEGO blocks, it classifies crawling to be some components. Every component has its own responsibility to do something. 
+Components could reuse others if it needs. One component focus one thing. Finally, the components combines to form a crawler.
 
 
 ## Quickly Start
 
-This package doesn't release currently. So it only could be installed by _setup.py_.
+Install _smoothcrawler_ via **pip**:
 
-    python setup.py install
+    pip install smoothcrawler
 
 Let's write a simple crawler to crawl data.
 
+* Component 1: Send HTTP requests
 
-## Flow
+```python
+from smoothcrawler.components.httpio import HTTP
+import urllib3
 
-* ### Work Flow
+class FooHTTPRequest(HTTP):
 
-The work-flow about crawling target web content: <br>
-<img src="https://github.com/Chisanan232/pytsunami/blob/master/doc/imgs/SmoothCrawler-Work_Flow.png" width="461" height="681" alt="Crawler work-flow"/><br/>
+    __Http_Response = None
 
+    def get(self, url: str, *args, **kwargs):
+        _http = urllib3.PoolManager()
+        self.__Http_Response = _http.request("GET", url)
+        return self.__Http_Response
+```
 
-* ### Cross Function Flow
-<img src="https://github.com/Chisanan232/smoothcrawler/blob/master/doc/imgs/smoothcrawler_simple-crawler_cross-function_flow.png" width="725" height="700" alt="Crawler work-flow"/><br/>
+* Component 2: Get and parse HTTP response
 
+```python
+from smoothcrawler.components.data import BaseHTTPResponseParser
+from typing import Any
+import urllib3
 
-## Usage
+class FooHTTPResponseParser(BaseHTTPResponseParser):
 
-* Crawler Roles
-    * [Simple Crawler](#simple-crawler)
-    * [Executor Crawler](#executor-crawler)
-    * [Asynchronous Executor Crawler](#asynchronous-executor-crawler)
-    * [Pool Crawler](#pool-crawler)
-    * [Crazy Crawler](#crazy-crawler)
-* Crawler Components
-    * [HTTP IO Handler](#http-io-handler)
-    * [Data Handler](#data-handler)
-        * [HTTP Response](#http-response)
-        * [Data Process](#data-process)
-    * [Persistence Handler](#persistence-handler)
-        * [File](#file)
-        * [Database](#database)
-
-<br>
-
-### Crawler Roles
-<hr>
-
-* ### Simple Crawler
-
-* ### Executor Crawler
-
-* ### Asynchronous Executor Crawler
-
-* ### Pool Crawler
-
-* ### Crazy Crawler
-
-<br>
+    def get_status_code(self, response: urllib3.response.HTTPResponse) -> int:
+        return response.status
 
 
-### Crawler Components
-<hr>
+    def handling_200_response(self, response: urllib3.response.HTTPResponse) -> Any:
+        _data = response.data.decode('utf-8')
+        return _data
+```
 
-* ### HTTP IO Handler
+* Component 3: Handle data processing
 
-* ### Data Handler
+```python
+from smoothcrawler.components.data import BaseDataHandler
+import json
 
-    * #### HTTP Response
+class FooDataHandler(BaseDataHandler):
 
-    * #### Data Process
+    def process(self, result):
+        _result_json = json.loads(result)
+        _result_data = _result_json["data"]
 
-* ### Persistence Handler
+        _final_data = []
+        _data_row = []
 
-    * #### File
+        for _d in _result_data:
+            # # stock_date
+            _data_row.append(_d[0].replace("/", "-"))
+            # # trade_volume
+            _data_row.append(int(_d[1].replace(",", "")))
+            # # turnover_price
+            _data_row.append(int(_d[2].replace(",", "")))
+            # # opening_price
+            _data_row.append(float(_d[3]))
+            # # highest_price
+            _data_row.append(float(_d[4]))
+            # # lowest_price
+            _data_row.append(float(_d[5]))
+            # # closing_price
+            _data_row.append(float(_d[6]))
+            # # gross_spread
+            _data_row.append(str(_d[7]))
+            # # turnover_volume
+            _data_row.append(int(_d[8].replace(",", "")))
 
-    * #### Database
+            _final_data.append(_data_row.copy())
+            _data_row[:] = []
 
+        return _final_data
+```
 
+* Product: Components combine to form a  crawler
+
+```python
+from smoothcrawler.crawler import SimpleCrawler
+from smoothcrawler.factory import CrawlerFactory
+
+# Taiwan stock data
+Test_URL_TW_Stock = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210801&stockNo=2330"
+
+_cf = CrawlerFactory()
+_cf.http_factory = FooHTTPRequest()
+_cf.parser_factory = FooHTTPResponseParser()
+_cf.data_handling_factory = FooDataHandler()
+
+# Crawler Role: Simple Crawler
+sc = SimpleCrawler(factory=_cf)
+data = sc.run("GET", Test_URL_TW_Stock)
+print(f"data: {data}")
+```
 
