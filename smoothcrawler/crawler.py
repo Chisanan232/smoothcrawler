@@ -1,8 +1,7 @@
 from smoothcrawler.factory import CrawlerFactory
 from smoothcrawler.components.httpio import (
     set_retry as _set_retry,
-    BaseHTTP as _BaseHttpIo,
-    BaseRetryComponent as _BaseRetryComponent
+    BaseHTTP as _BaseHttpIo
 )
 from smoothcrawler.components.data import (
     BaseHTTPResponseParser as _BaseHTTPResponseParser,
@@ -22,6 +21,10 @@ from multirunnable.adapter import Lock, BoundedSemaphore
 from multipledispatch import dispatch
 import logging
 
+
+RunAsParallel = RunningMode.Parallel
+RunAsConcurrent = RunningMode.Concurrent
+RunAsCoroutine = RunningMode.GreenThread
 
 
 class BaseCrawler(metaclass=ABCMeta):
