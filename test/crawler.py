@@ -14,23 +14,23 @@ from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 
 from ._components import (
     MyRetry,
-    Urllib3HTTPRequest, RequestsHTTPRequest, StockAsyncHTTPRequest,
-    Urllib3StockHTTPResponseParser, RequestsStockHTTPResponseParser, StockAsyncHTTPResponseParser,
-    StockDataHandler, StockAsyncDataHandler,
-    StockDataFilePersistenceLayer,
-    StockDataDatabasePersistenceLayer)
+    Urllib3HTTPRequest, RequestsHTTPRequest, AsyncHTTPRequest,
+    Urllib3HTTPResponseParser, RequestsHTTPResponseParser, AsyncHTTPResponseParser,
+    ExampleWebDataHandler, ExampleWebAsyncDataHandler,
+    DataFilePersistenceLayer,
+    DataDatabasePersistenceLayer)
 
 
 T = TypeVar("T")
 
 HTTP_METHOD = "GET"
-Test_URL_TW_Stock = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210801&stockNo=2330"
-Test_URL_TW_Stock_With_Option = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={date}&stockNo=2330"
+Test_Example_URL = "http://www.example.com/"
+Test_Example_URL_With_Option = "http://www.example.com?date={date}"
 
 
 @pytest.fixture(scope="class")
 def urls() -> list:
-    _url = URL(base=Test_URL_TW_Stock_With_Option, start="20210801", end="20211201", formatter="yyyymmdd")
+    _url = URL(base=Test_Example_URL_With_Option, start="20210801", end="20211201", formatter="yyyymmdd")
     _url.set_period(days=31, hours=0, minutes=0, seconds=0)
     _target_urls = _url.generate()
     return _target_urls
@@ -38,7 +38,7 @@ def urls() -> list:
 
 @pytest.fixture(scope="class")
 def less_urls() -> list:
-    _url = URL(base=Test_URL_TW_Stock_With_Option, start="20210801", end="20210901", formatter="yyyymmdd")
+    _url = URL(base=Test_Example_URL_With_Option, start="20210801", end="20210901", formatter="yyyymmdd")
     _url.set_period(days=31, hours=0, minutes=0, seconds=0)
     _target_urls = _url.generate()
     return _target_urls
@@ -65,15 +65,15 @@ class TestSimpleCrawler(BaseCrawlerTestSpec):
     def crawler(self) -> BaseCrawler:
         _cf = CrawlerFactory()
         _cf.http_factory = Urllib3HTTPRequest(retry_components=MyRetry())
-        _cf.parser_factory = Urllib3StockHTTPResponseParser()
-        _cf.data_handling_factory = StockDataHandler()
+        _cf.parser_factory = Urllib3HTTPResponseParser()
+        _cf.data_handling_factory = ExampleWebDataHandler()
 
         _sc = SimpleCrawler(factory=_cf)
         return _sc
 
 
     def test_run_with_one_url(self, crawler: SimpleCrawler):
-        result = crawler.run("GET", Test_URL_TW_Stock)
+        result = crawler.run("GET", Test_Example_URL)
         assert result is not None, f"It should get some data finally."
 
 
@@ -84,7 +84,7 @@ class TestSimpleCrawler(BaseCrawlerTestSpec):
 
     @pytest.mark.skip(reason="[TestSimpleCrawler.run_and_save] doesn't implement testing code.")
     def test_run_and_save(self, crawler: SimpleCrawler):
-        result = crawler.run("GET", Test_URL_TW_Stock)
+        result = crawler.run("GET", Test_Example_URL)
         assert result is not None, f"It should get some data finally."
 
 
@@ -94,9 +94,9 @@ class TestAsyncSimpleCrawler(BaseCrawlerTestSpec):
     @pytest.fixture
     def crawler(self) -> BaseCrawler:
         _acf = AsyncCrawlerFactory()
-        _acf.http_factory = StockAsyncHTTPRequest()
-        _acf.parser_factory = StockAsyncHTTPResponseParser()
-        _acf.data_handling_factory = StockAsyncDataHandler()
+        _acf.http_factory = AsyncHTTPRequest()
+        _acf.parser_factory = AsyncHTTPResponseParser()
+        _acf.data_handling_factory = ExampleWebAsyncDataHandler()
 
         _sc = AsyncSimpleCrawler(factory=_acf, executors=3)
         return _sc
@@ -125,8 +125,8 @@ class TestExecutorCrawler(BaseCrawlerTestSpec):
     def crawler(self) -> BaseCrawler:
         _cf = CrawlerFactory()
         _cf.http_factory = Urllib3HTTPRequest(retry_components=MyRetry())
-        _cf.parser_factory = Urllib3StockHTTPResponseParser()
-        _cf.data_handling_factory = StockDataHandler()
+        _cf.parser_factory = Urllib3HTTPResponseParser()
+        _cf.data_handling_factory = ExampleWebDataHandler()
 
         _sc = ExecutorCrawler(factory=_cf, mode=RunAsParallel, executors=3)
         return _sc
@@ -157,8 +157,8 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
         # _cf.http_factory = Urllib3HTTPRequest()
         # _cf.parser_factory = Urllib3StockHTTPResponseParser()
         _cf.http_factory = RequestsHTTPRequest()
-        _cf.parser_factory = RequestsStockHTTPResponseParser()
-        _cf.data_handling_factory = StockDataHandler()
+        _cf.parser_factory = RequestsHTTPResponseParser()
+        _cf.data_handling_factory = ExampleWebDataHandler()
 
         _sc = PoolCrawler(factory=_cf, mode=RunAsConcurrent, pool_size=5, tasks_size=3)
         return _sc
@@ -166,7 +166,7 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
 
     def test_apply(self, crawler: PoolCrawler):
         crawler.init(lock=False, sema_value=3)
-        data = crawler.apply(method="GET", url=Test_URL_TW_Stock)
+        data = crawler.apply(method="GET", url=Test_Example_URL)
         crawler.close()
 
         assert data is not None, f"It should get some data finally."
@@ -175,13 +175,13 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
     def test_apply_by_python_keyword_with(self, crawler: PoolCrawler):
         with crawler as _pc:
             _pc.init(lock=False, sema_value=3)
-            data = _pc.apply(method="GET", url=Test_URL_TW_Stock)
+            data = _pc.apply(method="GET", url=Test_Example_URL)
             assert data is not None, f"It should get some data finally."
 
 
     def test_async_apply(self, crawler: PoolCrawler):
         crawler.init(lock=False, sema_value=3)
-        data = crawler.async_apply(method="GET", url=Test_URL_TW_Stock)
+        data = crawler.async_apply(method="GET", url=Test_Example_URL)
         crawler.close()
 
         assert data is not None, f"It should get some data finally."
@@ -190,7 +190,7 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
     def test_async_apply_by_python_keyword_with(self, crawler: PoolCrawler):
         with crawler as _pc:
             _pc.init(lock=False, sema_value=3)
-            data = _pc.async_apply(method="GET", url=Test_URL_TW_Stock)
+            data = _pc.async_apply(method="GET", url=Test_Example_URL)
             assert data is not None, f"It should get some data finally."
 
 
