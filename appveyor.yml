@@ -82,9 +82,13 @@ install:
 #  - "%PYTHON%\\python.exe -m pip install . -r requirements.txt"
   - "%PYTHON%\\python.exe -m pip install pytest"
   - "%PYTHON%\\python.exe -m pip install pytest-cov"
+  - "%PYTHON%\\python.exe -m pip install pytest-rerunfailures"
   - "%PYTHON%\\python.exe -m pip install codecov"
+  - "%PYTHON%\\python.exe -m pip install aiohttp"
+  - "%PYTHON%\\python.exe -m pip install urllib3"
   - "%PYTHON%\\python.exe -m pip install requests"
   - "%PYTHON%\\python.exe -m pip install beautifulsoup4"
+  - "%PYTHON%\\python.exe -m pip install mysql-connector-python"
   - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
 
 #cache:
