@@ -154,7 +154,7 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
     @pytest.fixture
     def crawler(self) -> BaseCrawler:
         _cf = CrawlerFactory()
-        _cf.http_factory = StockHTTPRequest(retry_components=MyRetry())
+        _cf.http_factory = StockHTTPRequest()
         _cf.parser_factory = StockHTTPResponseParser()
         _cf.data_handling_factory = StockDataHandler()
 
