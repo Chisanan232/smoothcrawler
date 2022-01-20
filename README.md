@@ -2,7 +2,7 @@
 
 [![Supported Versions](https://img.shields.io/pypi/pyversions/smoothcrawler.svg?logo=python&logoColor=FBE072)](https://pypi.org/project/smoothcrawler)
 [![Release](https://img.shields.io/github/release/Chisanan232/smoothcrawler.svg?label=Release&sort=semver)](https://github.com/Chisanan232/smoothcrawler/releases)
-[![PyPI version](https://badge.fury.io/py/smoothcrawler.svg)](https://badge.fury.io/py/smoothcrawler)
+[![PyPI version](https://badge.fury.io/py/SmoothCrawler.svg)](https://badge.fury.io/py/SmoothCrawler)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 | OS | Building Status | Coverage Status |
