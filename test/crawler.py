@@ -128,7 +128,7 @@ class TestExecutorCrawler(BaseCrawlerTestSpec):
         _cf.parser_factory = Urllib3HTTPResponseParser()
         _cf.data_handling_factory = ExampleWebDataHandler()
 
-        _sc = ExecutorCrawler(factory=_cf, mode=RunAsParallel, executors=3)
+        _sc = ExecutorCrawler(factory=_cf, mode=RunAsCoroutine, executors=3)
         return _sc
 
 
