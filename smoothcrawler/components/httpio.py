@@ -55,7 +55,7 @@ class RetryComponent(BaseRetryComponent):
 
 
     def request_error(self, error: Exception):
-        return error
+        raise error
 
 
 
@@ -74,7 +74,7 @@ class AsyncRetryComponent(BaseRetryComponent):
 
 
     async def request_error(self, error: Exception):
-        return error
+        raise error
 
 
 
