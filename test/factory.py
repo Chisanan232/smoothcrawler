@@ -4,8 +4,8 @@ from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 
 from ._components import (
     MyRetry,
-    StockHTTPRequest, StockAsyncHTTPRequest,
-    StockHTTPResponseParser, StockAsyncHTTPResponseParser,
+    Urllib3HTTPRequest, StockAsyncHTTPRequest,
+    Urllib3StockHTTPResponseParser, StockAsyncHTTPResponseParser,
     StockDataHandler, StockAsyncDataHandler,
     StockDataFilePersistenceLayer,
     StockDataDatabasePersistenceLayer)
@@ -24,7 +24,7 @@ def async_crawler_factory() -> AsyncCrawlerFactory:
 class TestCrawlerFactory:
 
     def test_http_factory(self, crawler_factory: CrawlerFactory):
-        _http_req = StockHTTPRequest(retry_components=MyRetry())
+        _http_req = Urllib3HTTPRequest(retry_components=MyRetry())
 
         try:
             crawler_factory.http_factory = _http_req
@@ -37,7 +37,7 @@ class TestCrawlerFactory:
 
 
     def test_parser_factory(self, crawler_factory: CrawlerFactory):
-        _response_parser = StockHTTPResponseParser()
+        _response_parser = Urllib3StockHTTPResponseParser()
 
         try:
             crawler_factory.parser_factory = _response_parser

@@ -3,9 +3,12 @@ from smoothcrawler.components.httpio import HTTP, RetryComponent, AsyncHTTP, Asy
 from smoothcrawler.persistence import PersistenceFacade
 from smoothcrawler.persistence.file import SavingStrategy
 from typing import Any
+import requests
 import urllib3
 import aiohttp
+import random
 import json
+import time
 
 from ._persistence_layer import StockDao, StockFao
 
@@ -38,13 +41,27 @@ class MyRetry(RetryComponent):
 
 
 
-class StockHTTPRequest(HTTP):
+class Urllib3HTTPRequest(HTTP):
 
     __Http_Response = None
 
     def get(self, url: str, *args, **kwargs):
         _http = urllib3.PoolManager()
+        _random_sleep = random.randrange(0, 10)
+        time.sleep(_random_sleep)
         self.__Http_Response = _http.request("GET", url)
+        return self.__Http_Response
+
+
+
+class RequestsHTTPRequest(HTTP):
+
+    __Http_Response = None
+
+    def get(self, url: str, *args, **kwargs):
+        _random_sleep = random.randrange(0, 10)
+        time.sleep(_random_sleep)
+        self.__Http_Response = requests.get(url)
         return self.__Http_Response
 
 
@@ -60,7 +77,7 @@ class StockAsyncHTTPRequest(AsyncHTTP):
 
 
 
-class StockHTTPResponseParser(BaseHTTPResponseParser):
+class Urllib3StockHTTPResponseParser(BaseHTTPResponseParser):
 
     def get_status_code(self, response: urllib3.response.HTTPResponse) -> int:
         return response.status
@@ -68,6 +85,18 @@ class StockHTTPResponseParser(BaseHTTPResponseParser):
 
     def handling_200_response(self, response: urllib3.response.HTTPResponse) -> Any:
         _data = response.data.decode('utf-8')
+        return _data
+
+
+
+class RequestsStockHTTPResponseParser(BaseHTTPResponseParser):
+
+    def get_status_code(self, response: requests.Response) -> int:
+        return response.status_code
+
+
+    def handling_200_response(self, response: requests.Response) -> Any:
+        _data = response.json()
         return _data
 
 

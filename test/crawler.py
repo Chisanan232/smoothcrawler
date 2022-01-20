@@ -14,8 +14,8 @@ from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 
 from ._components import (
     MyRetry,
-    StockHTTPRequest, StockAsyncHTTPRequest,
-    StockHTTPResponseParser, StockAsyncHTTPResponseParser,
+    Urllib3HTTPRequest, RequestsHTTPRequest, StockAsyncHTTPRequest,
+    Urllib3StockHTTPResponseParser, RequestsStockHTTPResponseParser, StockAsyncHTTPResponseParser,
     StockDataHandler, StockAsyncDataHandler,
     StockDataFilePersistenceLayer,
     StockDataDatabasePersistenceLayer)
@@ -64,8 +64,8 @@ class TestSimpleCrawler(BaseCrawlerTestSpec):
     @pytest.fixture
     def crawler(self) -> BaseCrawler:
         _cf = CrawlerFactory()
-        _cf.http_factory = StockHTTPRequest(retry_components=MyRetry())
-        _cf.parser_factory = StockHTTPResponseParser()
+        _cf.http_factory = Urllib3HTTPRequest(retry_components=MyRetry())
+        _cf.parser_factory = Urllib3StockHTTPResponseParser()
         _cf.data_handling_factory = StockDataHandler()
 
         _sc = SimpleCrawler(factory=_cf)
@@ -124,8 +124,8 @@ class TestExecutorCrawler(BaseCrawlerTestSpec):
     @pytest.fixture
     def crawler(self) -> BaseCrawler:
         _cf = CrawlerFactory()
-        _cf.http_factory = StockHTTPRequest(retry_components=MyRetry())
-        _cf.parser_factory = StockHTTPResponseParser()
+        _cf.http_factory = Urllib3HTTPRequest(retry_components=MyRetry())
+        _cf.parser_factory = Urllib3StockHTTPResponseParser()
         _cf.data_handling_factory = StockDataHandler()
 
         _sc = ExecutorCrawler(factory=_cf, mode=RunAsParallel, executors=3)
@@ -154,8 +154,10 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
     @pytest.fixture
     def crawler(self) -> BaseCrawler:
         _cf = CrawlerFactory()
-        _cf.http_factory = StockHTTPRequest()
-        _cf.parser_factory = StockHTTPResponseParser()
+        # _cf.http_factory = Urllib3HTTPRequest()
+        # _cf.parser_factory = Urllib3StockHTTPResponseParser()
+        _cf.http_factory = RequestsHTTPRequest()
+        _cf.parser_factory = RequestsStockHTTPResponseParser()
         _cf.data_handling_factory = StockDataHandler()
 
         _sc = PoolCrawler(factory=_cf, mode=RunAsConcurrent, pool_size=5, tasks_size=3)
