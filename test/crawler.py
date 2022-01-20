@@ -24,8 +24,6 @@ from ._components import (
 T = TypeVar("T")
 
 HTTP_METHOD = "GET"
-TEST_URL = "https://www.google.com"
-TEST_TIMEOUT_URL = "https://www.test.com"
 Test_URL_TW_Stock = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210801&stockNo=2330"
 Test_URL_TW_Stock_With_Option = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={date}&stockNo=2330"
 
@@ -160,7 +158,7 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
         _cf.parser_factory = StockHTTPResponseParser()
         _cf.data_handling_factory = StockDataHandler()
 
-        _sc = PoolCrawler(factory=_cf, mode=RunAsParallel, pool_size=5, tasks_size=3)
+        _sc = PoolCrawler(factory=_cf, mode=RunAsConcurrent, pool_size=5, tasks_size=3)
         return _sc
 
 
