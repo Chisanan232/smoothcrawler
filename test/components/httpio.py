@@ -183,6 +183,14 @@ Final_Flag = 0
 Exception_Flag = 0
 
 
+def reset_counter():
+    global Initial_Flag, Done_Flag, Final_Flag, Exception_Flag
+    Initial_Flag = 0
+    Done_Flag = 0
+    Final_Flag = 0
+    Exception_Flag = 0
+
+
 class _MyRetry(RetryComponent):
 
     """
@@ -721,6 +729,8 @@ class TestHttp(BaseHttpTestSpec):
 
 
     def test_retry_before_request(self):
+        reset_counter()
+
         set_retry(RETRY_TIMES)
         my_retry = _MyRetry()
         for test_mode in [True, False]:
@@ -729,6 +739,7 @@ class TestHttp(BaseHttpTestSpec):
 
             http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
             http_cls.before_request = my_retry.before_request
+            http_cls.request_error = my_retry.request_error
             response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
 
             if test_mode is True:
@@ -738,11 +749,14 @@ class TestHttp(BaseHttpTestSpec):
 
 
     def test_retry_request_done(self):
+        reset_counter()
+
         set_retry(RETRY_TIMES)
         my_retry = _MyRetry()
         for test_mode in [True, False]:
             http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
             http_cls.request_done = my_retry.request_done
+            http_cls.request_error = my_retry.request_error
             response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
 
             global Done_Flag
@@ -756,11 +770,14 @@ class TestHttp(BaseHttpTestSpec):
 
 
     def test_retry_request_final(self):
+        reset_counter()
+
         set_retry(RETRY_TIMES)
         my_retry = _MyRetry()
         for test_mode in [True, False]:
             http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
             http_cls.request_final = my_retry.request_final
+            http_cls.request_error = my_retry.request_error
             response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
 
             global Final_Flag
@@ -771,6 +788,8 @@ class TestHttp(BaseHttpTestSpec):
 
 
     def test_retry_request_error(self):
+        reset_counter()
+
         set_retry(RETRY_TIMES)
         my_retry = _MyRetry()
         for test_mode in [True, False]:
@@ -789,6 +808,8 @@ class TestHttp(BaseHttpTestSpec):
 
 
     def test_retry_mechanism_with_properties(self):
+        reset_counter()
+
         set_retry(RETRY_TIMES)
         for test_mode in [True, False]:
             global Initial_Flag, Done_Flag, Final_Flag, Exception_Flag
@@ -811,6 +832,8 @@ class TestHttp(BaseHttpTestSpec):
 
 
     def test_retry_mechanism_with_adapter(self):
+        reset_counter()
+
         set_retry(RETRY_TIMES)
         for test_mode in [True, False]:
             global Initial_Flag, Done_Flag, Final_Flag, Exception_Flag
