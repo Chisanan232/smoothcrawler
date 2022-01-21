@@ -1,4 +1,4 @@
-# smoothcrawler
+# SmoothCrawler
 
 [![Supported Versions](https://img.shields.io/pypi/pyversions/smoothcrawler.svg?logo=python&logoColor=FBE072)](https://pypi.org/project/smoothcrawler)
 [![Release](https://img.shields.io/github/release/Chisanan232/smoothcrawler.svg?label=Release&sort=semver)](https://github.com/Chisanan232/smoothcrawler/releases)
@@ -10,7 +10,7 @@
 | Linux |[![Build Status](https://app.travis-ci.com/Chisanan232/smoothcrawler.svg?branch=master)](https://app.travis-ci.com/Chisanan232/smoothcrawler)|Deprecated|
 | Linux |[![CircleCI](https://circleci.com/gh/Chisanan232/smoothcrawler.svg?style=shield)](https://app.circleci.com/pipelines/github/Chisanan232/smoothcrawler)|[![codecov](https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT)](https://codecov.io/gh/Chisanan232/smoothcrawler)|
 | Linux/MacOS |[![Run Python Tests](https://github.com/Chisanan232/smoothcrawler/actions/workflows/ci.yml/badge.svg)](https://github.com/Chisanan232/smoothcrawler/actions/workflows/ci.yml)|[![codecov](https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT)](https://codecov.io/gh/Chisanan232/smoothcrawler)|
-| Windows |[![Build status](https://ci.appveyor.com/api/projects/status/1eri78jtxvu5r0q2?svg=true)](https://ci.appveyor.com/project/Chisanan232/smoothcrawler)|[![Coverage Status](https://coveralls.io/repos/github/Chisanan232/smoothcrawler/badge.svg)](https://coveralls.io/github/Chisanan232/smoothcrawler)|
+| Windows |[![Build status](https://ci.appveyor.com/api/projects/status/1eri78jtxvu5r0q2?svg=true)](https://ci.appveyor.com/project/Chisanan232/smoothcrawler)|[![Coverage Status](https://coveralls.io/repos/github/Chisanan232/smoothcrawler/badge.svg?branch=master)](https://coveralls.io/github/Chisanan232/smoothcrawler?branch=master)|
 
 A Python package for building crawler humanly as different roles.
 
@@ -46,6 +46,8 @@ Let's write a simple crawler to crawl data.
 
 * Component 1: Send HTTP requests
 
+Implement with Python package _urllib3_. Of course, it could implement by _requests_, too.
+
 ```python
 from smoothcrawler.components.httpio import HTTP
 import urllib3
@@ -61,6 +63,8 @@ class FooHTTPRequest(HTTP):
 ```
 
 * Component 2: Get and parse HTTP response
+
+Get the HTTP response object and get the content data from it. It only decodes the data because the data is so clean of the API.
 
 ```python
 from smoothcrawler.components.data import BaseHTTPResponseParser
@@ -79,6 +83,8 @@ class FooHTTPResponseParser(BaseHTTPResponseParser):
 ```
 
 * Component 3: Handle data processing
+
+Demonstrate it could do some data processing here.
 
 ```python
 from smoothcrawler.components.data import BaseDataHandler
@@ -120,6 +126,9 @@ class FooDataHandler(BaseDataHandler):
 ```
 
 * Product: Components combine to form a  crawler
+
+It has 3 components now: HTTP sender, HTTP response parser and data processing handler.
+They could combine to form a crawler and crawl data from target URL(s) via crawler role 'SimpleCrawler'.
 
 ```python
 from smoothcrawler.crawler import SimpleCrawler
