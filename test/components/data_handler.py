@@ -7,6 +7,7 @@ from urllib3 import PoolManager, HTTPResponse
 from requests import Response
 import asyncio
 import aiohttp
+import sys
 
 
 Test_URL = "http://www.example.com/"
@@ -230,6 +231,13 @@ class TestHTTPResponseParser(BaseHTTPResponseParserTestSpec):
         assert parsed_result == "Invalid Website", f"It should return the value 'Invalid Website'."
 
 
+def _run_async_func(_callable):
+    if "3.6" in sys.version:
+        _event_loop = asyncio.get_event_loop()
+        _event_loop.run_until_complete(_callable())
+    else:
+        asyncio.run(_callable())
+
 
 class TestAsyncHTTPResponseParser(BaseHTTPResponseParserTestSpec):
 
@@ -251,7 +259,7 @@ class TestAsyncHTTPResponseParser(BaseHTTPResponseParserTestSpec):
 
             assert handled_response in await response.text(), "The parsed result data should be exist in original content data."
 
-        asyncio.run(_process())
+        _run_async_func(_process)
 
 
     def test_get_http_status_code(self):
@@ -265,7 +273,7 @@ class TestAsyncHTTPResponseParser(BaseHTTPResponseParserTestSpec):
             assert status_code == response.status, \
                 "These 2 objects should be the same so that the attribute value also the same."
 
-        asyncio.run(_process())
+        _run_async_func(_process)
 
 
     def test_handle_http_200_response(self):
@@ -281,7 +289,7 @@ class TestAsyncHTTPResponseParser(BaseHTTPResponseParserTestSpec):
                 f"It should not run the method 'handle_http_not_200_response' because {Test_URL} is activate."
             assert parsed_result == "Example Domain", f"It should get the target website '{Test_URL}' content and parse the web title."
 
-        asyncio.run(_process())
+        _run_async_func(_process)
 
 
     def test_handle_http_not_200_response(self):
@@ -297,7 +305,7 @@ class TestAsyncHTTPResponseParser(BaseHTTPResponseParserTestSpec):
                 f"It should run the method 'handle_http_not_200_response' because status_code always return 300 in class '_Not200HTTPResponseParser'."
             assert parsed_result == "Invalid Website", f"It should return the value 'Invalid Website'."
 
-        asyncio.run(_process())
+        _run_async_func(_process)
 
 
 
@@ -328,5 +336,5 @@ class TestAsyncDataHandler(BaseDataHandleTestSpec):
             handled_data = await data_handler.process(result=parsed_result)
             assert handled_data == f"Because I got {parsed_result}, I like to move it, move it.", f"The handled data format should conform to the implementation of data processing in class '_MyExampleDataHandler'."
 
-        asyncio.run(_process())
+        _run_async_func(_process)
 
