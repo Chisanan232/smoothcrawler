@@ -62,7 +62,7 @@ Note:
 from smoothcrawler.persistence.database import BaseCrawlerDao
 from smoothcrawler.persistence.file import BaseCrawlerFao, SavingStrategy, SavingMediator
 
-from crawler_db_mysql import MySQLSingleConnection, MySQLDriverConnectionPool, MySQLOperator
+from mysql_impl import MySQLSingleConnection, MySQLDriverConnectionPool, MySQLOperator
 
 from mysql.connector import MySQLConnection, errorcode
 from mysql.connector.errors import DatabaseError, PoolError

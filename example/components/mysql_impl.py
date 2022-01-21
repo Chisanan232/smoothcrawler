@@ -1,4 +1,3 @@
-from multirunnable.persistence.database.operator import T
 from smoothcrawler.persistence.database import get_connection_pool, BaseCrawlerSingleConnection, BaseCrawlerConnectionPool, BaseCrawlerDatabaseOperator, BaseCrawlerDao
 
 from typing import Any, Tuple, cast, Union, Generic
