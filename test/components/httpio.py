@@ -431,6 +431,7 @@ class BaseHttpTestSpec(metaclass=ABCMeta):
 
 class TestHttp(BaseHttpTestSpec):
 
+    @pytest.mark.skip(reason="No implement testing logic.")
     def test_request_url(self, *args, **kwargs):
         pass
 
@@ -455,10 +456,12 @@ class TestHttp(BaseHttpTestSpec):
         assert TestHttp.__status_code_is_valid(status_code) is True, "This is not a valid status code."
 
 
+    @pytest.mark.skip(reason="No implement testing logic.")
     def test_request_timeout(self):
         pass
 
 
+    @pytest.mark.skip(reason="No implement testing logic.")
     def test_request_retry(self):
         pass
 
