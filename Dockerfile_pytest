@@ -1,0 +1,20 @@
+FROM python:3.10
+
+WORKDIR ./
+
+COPY . .
+
+RUN pip install -U pip
+RUN pip install -U pytest
+RUN pip install -U pytest-cov
+RUN pip install -U pytest-rerunfailures
+RUN pip install codecov
+RUN pip install aiohttp
+RUN pip install urllib3
+RUN pip install requests
+RUN pip install beautifulsoup4
+RUN pip install mysql-connector-python
+RUN pip install -r requirements.txt
+
+CMD ["pytest"]
+
