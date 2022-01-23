@@ -1,4 +1,4 @@
-# Import package multirunnable
+# Import package smoothcrawler
 import pathlib
 import sys
 import os
