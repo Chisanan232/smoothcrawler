@@ -1,8 +1,5 @@
 from smoothcrawler.factory import BaseFactory, CrawlerFactory, AsyncCrawlerFactory
-from smoothcrawler.components.httpio import (
-    set_retry as _set_retry,
-    BaseHTTP as _BaseHttpIo
-)
+from smoothcrawler.components.httpio import BaseHTTP as _BaseHttpIo
 from smoothcrawler.components.data import (
     BaseHTTPResponseParser as _BaseHTTPResponseParser,
     BaseDataHandler as _BaseDataHandler
@@ -11,7 +8,7 @@ from smoothcrawler.persistence import PersistenceFacade as _PersistenceFacade
 
 from abc import ABCMeta, abstractmethod
 from queue import Queue
-from typing import List, Iterable, Any, Union, Optional, Deque, Sequence
+from typing import List, Iterable, Any, Union, Optional, Callable
 from multirunnable import (
     RunningMode,
     SimpleExecutor,
@@ -43,9 +40,12 @@ class BaseCrawler(metaclass=ABCMeta):
               url: str,
               retry: int = 1,
               *args, **kwargs) -> Any:
-        _set_retry(times=retry)
-        response = self._factory.http_factory.request(method=method, url=url, *args, **kwargs)
+        print(f"[DEBUG in BaseCrawler.crawl] method: {method}")
+        print(f"[DEBUG in BaseCrawler.crawl] url: {url}")
+        response = self._factory.http_factory.request(method=method, url=url, timeout=retry, *args, **kwargs)
+        print(f"[DEBUG in BaseCrawler.crawl] response: {response}")
         parsed_response = self._factory.parser_factory.parse_content(response=response)
+        print(f"[DEBUG in BaseCrawler.crawl] parsed_response: {parsed_response}")
         return parsed_response
 
 
@@ -104,7 +104,6 @@ class MultiRunnableCrawler(BaseCrawler):
         :param kwargs:
         :return:
         """
-        _set_retry(times=retry)
         _handled_data = []
         for _target_url in url:
             parsed_response = self.crawl(method=method, url=_target_url)
@@ -128,7 +127,6 @@ class MultiRunnableCrawler(BaseCrawler):
         :param kwargs:
         :return:
         """
-        _set_retry(times=retry)
         _handled_data = []
         while url.empty() is False:
             _target_url = url.get()
@@ -185,8 +183,7 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
                     method: str,
                     retry: int = 1,
                     *args, **kwargs) -> Any:
-        _set_retry(times=retry)
-        response = await self._factory.http_factory.request(method=method, url=url, *args, **kwargs)
+        response = await self._factory.http_factory.request(method=method, url=url, timeout=retry, *args, **kwargs)
         parsed_response = await self._factory.parser_factory.parse_content(response=response)
         return parsed_response
 
@@ -206,10 +203,9 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
         :param kwargs:
         :return:
         """
-        _set_retry(times=retry)
         _handled_data = []
         for _target_url in url:
-            parsed_response = await self.crawl(method=method, url=_target_url)
+            parsed_response = await self.crawl(method=method, url=_target_url, retry=retry)
             _handled_data_row = await self._factory.data_handling_factory.process(result=parsed_response)
             _handled_data.append(_handled_data_row)
         return _handled_data
@@ -230,11 +226,10 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
         :param kwargs:
         :return:
         """
-        _set_retry(times=retry)
         _handled_data = []
         while url.empty() is False:
             _target_url = await url.get()
-            parsed_response = await self.crawl(method=method, url=_target_url)
+            parsed_response = await self.crawl(method=method, url=_target_url, retry=retry)
             _handled_data_row = await self._factory.data_handling_factory.process(result=parsed_response)
             _handled_data.append(_handled_data_row)
         return _handled_data
@@ -333,9 +328,9 @@ class ExecutorCrawler(MultiRunnableCrawler):
 
 class PoolCrawler(MultiRunnableCrawler):
 
-    def __init__(self, mode: RunningMode, pool_size: int, tasks_size: int, factory: CrawlerFactory):
+    def __init__(self, mode: RunningMode, pool_size: int, factory: CrawlerFactory):
         super(PoolCrawler, self).__init__(factory=factory)
-        self.__pool = SimplePool(mode=mode, pool_size=pool_size, tasks_size=tasks_size)
+        self.__pool = SimplePool(mode=mode, pool_size=pool_size)
 
 
     def __enter__(self):
@@ -359,20 +354,43 @@ class PoolCrawler(MultiRunnableCrawler):
         self.__pool.initial(queue_tasks=None, features=feature)
 
 
-    def apply(self, method: str, url: str, retry: int = 1) -> Optional:
-        _kwargs = {"method": method, "url": url, "retry": retry}
-        self.__pool.apply(function=self.crawl, kwargs=_kwargs)
+    def apply(self, method: str, urls: List[str], retry: int = 1) -> Optional:
+        _urls_len = len(urls)
+        _kwargs_iter = [{"method": method, "url": _url, "retry": retry} for _url in urls]
+        self.__pool.apply_with_iter(
+            functions_iter=[self.crawl for _ in range(_urls_len)],
+            kwargs_iter=_kwargs_iter)
         result = self.__pool.get_result()
         return result
 
 
-    def async_apply(self, method: str, url: str, retry: int = 1) -> Optional:
-        _kwargs = {"method": method, "url": url, "retry": retry}
-        self.__pool.async_apply(
-            function=self.crawl,
-            kwargs=_kwargs,
-            callback=None,
-            error_callback=None)
+    def async_apply(self,
+                    method: str, urls: List[str], retry: int = 1,
+                    callbacks: Union[Callable, List[Callable]] = None,
+                    error_callbacks: Union[Callable, List[Callable]] = None) -> Optional:
+        _urls_len = len(urls)
+
+        _kwargs_iter = [{"method": method, "url": _url, "retry": retry} for _url in urls]
+
+        if callbacks:
+            if type(callbacks) is not Iterable:
+                callbacks = [callbacks for _ in range(_urls_len)]
+            else:
+                if len(callbacks) != _urls_len:
+                    raise ValueError
+
+        if error_callbacks:
+            if type(error_callbacks) is not Iterable:
+                error_callbacks = [error_callbacks for _ in range(_urls_len)]
+            else:
+                if len(callbacks) != _urls_len:
+                    raise ValueError
+
+        self.__pool.async_apply_with_iter(
+            functions_iter=[self.crawl for _ in range(_urls_len)],
+            kwargs_iter=_kwargs_iter,
+            callback_iter=callbacks,
+            error_callback_iter=error_callbacks)
         result = self.__pool.get_result()
         return result
 
