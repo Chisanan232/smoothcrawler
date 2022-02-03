@@ -1,4 +1,4 @@
-from smoothcrawler.components.httpio import HTTP, RetryComponent, AsyncHTTP, AsyncRetryComponent
+from smoothcrawler.components.httpio import HTTP, AsyncHTTP
 import requests
 import urllib3
 import aiohttp
@@ -10,23 +10,6 @@ _HTTP_Header = {
     "User-Agent":
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"
                 }
-
-
-class MyRetry(RetryComponent):
-
-    def before_request(self, *args, **kwargs):
-        print("Initial process.")
-
-    def request_done(self, result):
-        print("Task done! ")
-        return result
-
-    def request_final(self):
-        print("Task done! ")
-
-    def request_error(self, error):
-        print("Got failure when run task.")
-        return error
 
 
 
