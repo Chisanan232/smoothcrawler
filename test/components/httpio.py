@@ -1,4 +1,4 @@
-from smoothcrawler.components.httpio import BaseHTTP, HTTP, AsyncHTTP, set_retry, RetryComponent
+from smoothcrawler.components.httpio import BaseHTTP, HTTP, AsyncHTTP
 from abc import ABCMeta, abstractmethod
 import urllib3
 import logging
@@ -191,35 +191,6 @@ def reset_counter():
     Exception_Flag = 0
 
 
-class _MyRetry(RetryComponent):
-
-    """
-    A sample code for implementing RetryComponent.
-    """
-
-    def before_request(self, *args, **kwargs):
-        global Initial_Flag
-        Initial_Flag += 1
-        Test_Http_Logger.info("Initial task process.")
-
-    def request_done(self, result):
-        global Done_Flag
-        Done_Flag += 1
-        Test_Http_Logger.info("Task done! ")
-        return result
-
-    def request_final(self):
-        global Final_Flag
-        Final_Flag += 1
-        Test_Http_Logger.info("Task done! ")
-
-    def request_error(self, error):
-        global Exception_Flag
-        Exception_Flag += 1
-        Test_Http_Logger.info("Got failure when run task.")
-        return error
-
-
 
 class _TestRetryRequestsHTTP(HTTP):
 
@@ -230,8 +201,8 @@ class _TestRetryRequestsHTTP(HTTP):
     __Fail_Mode = None
     __Http_Response = None
 
-    def __init__(self, fail_mode: bool = False, retry_components: RetryComponent = None):
-        super().__init__(retry_components=retry_components)
+    def __init__(self, fail_mode: bool = False):
+        super().__init__()
         self.__Fail_Mode = fail_mode
 
 
@@ -242,6 +213,36 @@ class _TestRetryRequestsHTTP(HTTP):
             _http = urllib3.PoolManager()
             self.__Http_Response = _http.request("GET", url)
             return self.__Http_Response
+
+
+    def before_request(self, *args, **kwargs):
+        global Initial_Flag
+        print(f"[DEBUG in _TestRetryRequestsHTTP.before_request_new]")
+        Initial_Flag += 1
+        Test_Http_Logger.info("Initial task process.")
+
+
+    def request_done(self, result):
+        global Done_Flag
+        print(f"[DEBUG in _TestRetryRequestsHTTP.request_done_new]")
+        Done_Flag += 1
+        Test_Http_Logger.info("Task done! ")
+        return result
+
+
+    def request_fail(self, error: Exception):
+        global Exception_Flag
+        print(f"[DEBUG in _TestRetryRequestsHTTP.request_fail_new]")
+        Exception_Flag += 1
+        Test_Http_Logger.info("Got failure when run task.")
+        return error
+
+
+    def request_final(self):
+        global Final_Flag
+        print(f"[DEBUG in _TestRetryRequestsHTTP.request_final_new]")
+        Final_Flag += 1
+        Test_Http_Logger.info("Task done! ")
 
 
     @property
@@ -380,51 +381,6 @@ class BaseHttpTestSpec(metaclass=ABCMeta):
 
     @abstractmethod
     def test_option(self):
-        pass
-
-
-    @abstractmethod
-    def test_retry_before_request(self):
-        """
-        Test Description:
-            Test for the property of 'before_request'.
-        :return:
-        """
-        pass
-
-
-    @abstractmethod
-    def test_retry_request_done(self):
-        """
-        Test Description:
-            Test for the property of 'request_done'.
-        :return:
-        """
-        pass
-
-
-    @abstractmethod
-    def test_retry_request_final(self):
-        """
-        Test Description:
-            Test for the property of 'request_final'.
-        :return:
-        """
-        pass
-
-
-    @abstractmethod
-    def test_retry_request_error(self):
-        """
-        Test Description:
-            Test for the property of 'request_error'.
-        :return:
-        """
-        pass
-
-
-    @abstractmethod
-    def test_retry_mechanism_with_properties(self):
         pass
 
 
@@ -731,113 +687,9 @@ class TestHttp(BaseHttpTestSpec):
         return target_random
 
 
-    def test_retry_before_request(self):
-        reset_counter()
-
-        set_retry(RETRY_TIMES)
-        my_retry = _MyRetry()
-        for test_mode in [True, False]:
-            global Initial_Flag
-            Initial_Flag = 0
-
-            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
-            http_cls.before_request = my_retry.before_request
-            http_cls.request_error = my_retry.request_error
-            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
-
-            if test_mode is True:
-                assert Initial_Flag == RETRY_TIMES, "Initial process times should be equal to retry times."
-            else:
-                assert Initial_Flag <= RETRY_TIMES, "Initial process times should be equal to retry times."
-
-
-    def test_retry_request_done(self):
-        reset_counter()
-
-        set_retry(RETRY_TIMES)
-        my_retry = _MyRetry()
-        for test_mode in [True, False]:
-            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
-            http_cls.request_done = my_retry.request_done
-            http_cls.request_error = my_retry.request_error
-            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
-
-            global Done_Flag
-
-            if test_mode is True:
-                assert Done_Flag == 0, "The times of done process should be equal to retry times."
-            else:
-                assert Done_Flag <= RETRY_TIMES, "The times of done process should be equal to retry times."
-
-            Done_Flag = 0
-
-
-    def test_retry_request_final(self):
-        reset_counter()
-
-        set_retry(RETRY_TIMES)
-        my_retry = _MyRetry()
-        for test_mode in [True, False]:
-            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
-            http_cls.request_final = my_retry.request_final
-            http_cls.request_error = my_retry.request_error
-            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
-
-            global Final_Flag
-            assert Final_Flag <= RETRY_TIMES, "Final process times should be equal to retry times."
-            Test_Http_Logger.debug(f"Final_Flag: {Final_Flag}")
-            Test_Http_Logger.debug(f"Exception_Flag: {Exception_Flag}")
-            Final_Flag = 0
-
-
-    def test_retry_request_error(self):
-        reset_counter()
-
-        set_retry(RETRY_TIMES)
-        my_retry = _MyRetry()
-        for test_mode in [True, False]:
-            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
-            http_cls.request_error = my_retry.request_error
-            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
-
-            global Exception_Flag
-
-            if test_mode is True:
-                assert Exception_Flag == RETRY_TIMES, "The times of exception handling process should be equal to retry times."
-            else:
-                assert Exception_Flag <= RETRY_TIMES, "The times of exception handling process should be equal to retry times."
-
-            Exception_Flag = 0
-
-
-    def test_retry_mechanism_with_properties(self):
-        reset_counter()
-
-        set_retry(RETRY_TIMES)
-        for test_mode in [True, False]:
-            global Initial_Flag, Done_Flag, Final_Flag, Exception_Flag
-            Initial_Flag = 0
-            Done_Flag = 0
-            Final_Flag = 0
-            Exception_Flag = 0
-
-            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
-            # It will raise TimeoutError if it doesn't get response after 5 seconds later.
-            # And it will retry to send HTTP request if it got any exception util overrate the retry times.
-            my_retry = _MyRetry()
-            http_cls.before_request = my_retry.before_request
-            http_cls.request_done = my_retry.request_done
-            http_cls.request_final = my_retry.request_final
-            http_cls.request_error = my_retry.request_error
-
-            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
-            TestHttp.__request_checking(test_mode, http_cls, response)
-
-
     def test_retry_mechanism_with_adapter(self):
         reset_counter()
 
-        set_retry(RETRY_TIMES)
         for test_mode in [True, False]:
             global Initial_Flag, Done_Flag, Final_Flag, Exception_Flag
             Initial_Flag = 0
@@ -845,8 +697,8 @@ class TestHttp(BaseHttpTestSpec):
             Final_Flag = 0
             Exception_Flag = 0
 
-            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode, retry_components=_MyRetry())
-            response = http_cls.request(url=TEST_URL, timeout=REQUEST_TIMEOUT)
+            http_cls = _TestRetryRequestsHTTP(fail_mode=test_mode)
+            response = http_cls.request(url=TEST_URL, timeout=RETRY_TIMES)
             TestHttp.__request_checking(test_mode, http_cls, response)
 
 

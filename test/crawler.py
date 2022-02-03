@@ -13,7 +13,7 @@ from smoothcrawler.urls import URL
 from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 
 from ._components import (
-    MyRetry,
+    # MyRetry,
     Urllib3HTTPRequest, RequestsHTTPRequest, AsyncHTTPRequest,
     Urllib3HTTPResponseParser, RequestsHTTPResponseParser, AsyncHTTPResponseParser,
     ExampleWebDataHandler, ExampleWebAsyncDataHandler,
@@ -64,7 +64,7 @@ class TestSimpleCrawler(BaseCrawlerTestSpec):
     @pytest.fixture
     def crawler(self) -> BaseCrawler:
         _cf = CrawlerFactory()
-        _cf.http_factory = Urllib3HTTPRequest(retry_components=MyRetry())
+        _cf.http_factory = Urllib3HTTPRequest()
         _cf.parser_factory = Urllib3HTTPResponseParser()
         _cf.data_handling_factory = ExampleWebDataHandler()
 
@@ -124,7 +124,7 @@ class TestExecutorCrawler(BaseCrawlerTestSpec):
     @pytest.fixture
     def crawler(self) -> BaseCrawler:
         _cf = CrawlerFactory()
-        _cf.http_factory = Urllib3HTTPRequest(retry_components=MyRetry())
+        _cf.http_factory = Urllib3HTTPRequest()
         _cf.parser_factory = Urllib3HTTPResponseParser()
         _cf.data_handling_factory = ExampleWebDataHandler()
 
@@ -160,13 +160,13 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
         _cf.parser_factory = RequestsHTTPResponseParser()
         _cf.data_handling_factory = ExampleWebDataHandler()
 
-        _sc = PoolCrawler(factory=_cf, mode=RunAsConcurrent, pool_size=5, tasks_size=3)
+        _sc = PoolCrawler(factory=_cf, mode=RunAsConcurrent, pool_size=5)
         return _sc
 
 
     def test_apply(self, crawler: PoolCrawler):
         crawler.init(lock=False, sema_value=3)
-        data = crawler.apply(method="GET", url=Test_Example_URL)
+        data = crawler.apply(method="GET", urls=[Test_Example_URL])
         crawler.close()
 
         assert data is not None, f"It should get some data finally."
@@ -175,13 +175,13 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
     def test_apply_by_python_keyword_with(self, crawler: PoolCrawler):
         with crawler as _pc:
             _pc.init(lock=False, sema_value=3)
-            data = _pc.apply(method="GET", url=Test_Example_URL)
+            data = _pc.apply(method="GET", urls=[Test_Example_URL])
             assert data is not None, f"It should get some data finally."
 
 
     def test_async_apply(self, crawler: PoolCrawler):
         crawler.init(lock=False, sema_value=3)
-        data = crawler.async_apply(method="GET", url=Test_Example_URL)
+        data = crawler.async_apply(method="GET", urls=[Test_Example_URL])
         crawler.close()
 
         assert data is not None, f"It should get some data finally."
@@ -190,7 +190,7 @@ class TestPoolCrawler(BaseCrawlerTestSpec):
     def test_async_apply_by_python_keyword_with(self, crawler: PoolCrawler):
         with crawler as _pc:
             _pc.init(lock=False, sema_value=3)
-            data = _pc.async_apply(method="GET", url=Test_Example_URL)
+            data = _pc.async_apply(method="GET", urls=[Test_Example_URL])
             assert data is not None, f"It should get some data finally."
 
 

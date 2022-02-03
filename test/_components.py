@@ -1,5 +1,5 @@
 from smoothcrawler.components.data import BaseHTTPResponseParser, BaseDataHandler, BaseAsyncHTTPResponseParser, BaseAsyncDataHandler
-from smoothcrawler.components.httpio import HTTP, RetryComponent, AsyncHTTP, AsyncRetryComponent
+from smoothcrawler.components.httpio import HTTP, AsyncHTTP
 from smoothcrawler.persistence import PersistenceFacade
 from smoothcrawler.persistence.file import SavingStrategy
 from typing import Any
@@ -19,23 +19,6 @@ _database_config = {
     "password": "password",
     "database": "tw_stock"
 }
-
-
-class MyRetry(RetryComponent):
-
-    def before_request(self, *args, **kwargs):
-        print("Initial process.")
-
-    def request_done(self, result):
-        print("Task done! ")
-        return result
-
-    def request_final(self):
-        print("Task done! ")
-
-    def request_error(self, error):
-        print("Got failure when run task.")
-        return error
 
 
 

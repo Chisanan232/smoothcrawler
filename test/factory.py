@@ -3,7 +3,6 @@ import pytest
 from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 
 from ._components import (
-    MyRetry,
     Urllib3HTTPRequest, AsyncHTTPRequest,
     Urllib3HTTPResponseParser, AsyncHTTPResponseParser,
     ExampleWebDataHandler, ExampleWebAsyncDataHandler,
@@ -24,7 +23,7 @@ def async_crawler_factory() -> AsyncCrawlerFactory:
 class TestCrawlerFactory:
 
     def test_http_factory(self, crawler_factory: CrawlerFactory):
-        _http_req = Urllib3HTTPRequest(retry_components=MyRetry())
+        _http_req = Urllib3HTTPRequest()
 
         try:
             crawler_factory.http_factory = _http_req
