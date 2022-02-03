@@ -9,7 +9,7 @@ from .data_handler import ExampleDataHandler, ExampleAsyncDataHandler
 
 HTTP_METHOD = "GET"
 Test_Example_URL = "http://www.example.com/"
-Test_Example_URL_With_Option = "http://www.example.com/"
+Test_Example_URL_With_Option = "http://www.example.com?date={date}"
 
 
 
@@ -70,9 +70,9 @@ class ExampleWebCrawlerImpl:
 
     def run_as_pool_crawler(self):
         # # Crawler Role: Pool Crawler
-        with PoolCrawler(factory=self._cf, mode=RunAsParallel, pool_size=5, tasks_size=3) as pc:
+        with PoolCrawler(factory=self._cf, mode=RunAsParallel, pool_size=5) as pc:
             pc.init(lock=False, sema_value=3)
-            data = pc.async_apply(method="GET", url=Test_Example_URL_With_Option)
+            data = pc.async_apply(method="GET", urls=[Test_Example_URL_With_Option])
             print(f"[DEBUG] data: {data}")
             for d in data:
                 print(f"[DEBUG] data: {d.data}")

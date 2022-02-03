@@ -1,6 +1,5 @@
 from smoothcrawler.crawler import RunAsParallel, RunAsConcurrent, RunAsCoroutine, SimpleCrawler, AsyncSimpleCrawler, ExecutorCrawler, PoolCrawler
 from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
-from smoothcrawler.components.httpio import set_retry
 from smoothcrawler.urls import URL
 
 from example.components.http_sender import Urllib3HTTPRequest, RequestsHTTPRequest, AsyncHTTPRequest, MyRetry
@@ -18,7 +17,7 @@ class StockCrawlerImpl:
 
     def __init__(self):
         self._cf = CrawlerFactory()
-        self._cf.http_factory = Urllib3HTTPRequest(retry_components=MyRetry())
+        self._cf.http_factory = Urllib3HTTPRequest()
         self._cf.parser_factory = Urllib3StockHTTPResponseParser()
         self._cf.data_handling_factory = StockDataHandler()
 
@@ -72,9 +71,9 @@ class StockCrawlerImpl:
 
     def run_as_pool_crawler(self):
         # # Crawler Role: Pool Crawler
-        with PoolCrawler(factory=self._cf, mode=RunAsParallel, pool_size=5, tasks_size=3) as pc:
+        with PoolCrawler(factory=self._cf, mode=RunAsParallel, pool_size=5) as pc:
             pc.init(lock=False, sema_value=3)
-            data = pc.async_apply(method="GET", url=Test_URL_TW_Stock)
+            data = pc.async_apply(method="GET", urls=[Test_URL_TW_Stock])
             print(f"[DEBUG] data: {data}")
             for d in data:
                 print(f"[DEBUG] data: {d.data}")
