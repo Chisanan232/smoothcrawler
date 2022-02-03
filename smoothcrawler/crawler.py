@@ -40,12 +40,8 @@ class BaseCrawler(metaclass=ABCMeta):
               url: str,
               retry: int = 1,
               *args, **kwargs) -> Any:
-        print(f"[DEBUG in BaseCrawler.crawl] method: {method}")
-        print(f"[DEBUG in BaseCrawler.crawl] url: {url}")
         response = self._factory.http_factory.request(method=method, url=url, timeout=retry, *args, **kwargs)
-        print(f"[DEBUG in BaseCrawler.crawl] response: {response}")
         parsed_response = self._factory.parser_factory.parse_content(response=response)
-        print(f"[DEBUG in BaseCrawler.crawl] parsed_response: {parsed_response}")
         return parsed_response
 
 
