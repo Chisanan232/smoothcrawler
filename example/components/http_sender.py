@@ -12,7 +12,6 @@ _HTTP_Header = {
                 }
 
 
-
 class Urllib3HTTPRequest(HTTP):
 
     __Http_Response = None
