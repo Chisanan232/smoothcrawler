@@ -2,7 +2,7 @@ from smoothcrawler.crawler import RunAsParallel, RunAsConcurrent, RunAsCoroutine
 from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 from smoothcrawler.urls import URL
 
-from example.components.http_sender import Urllib3HTTPRequest, RequestsHTTPRequest, AsyncHTTPRequest, MyRetry
+from example.components.http_sender import Urllib3HTTPRequest, RequestsHTTPRequest, AsyncHTTPRequest
 from .http_parser import Urllib3StockHTTPResponseParser, RequestsStockHTTPResponseParser, StockAsyncHTTPResponseParser
 from .data_handler import StockDataHandler, StockAsyncDataHandler
 
