@@ -4,6 +4,7 @@
 [![Release](https://img.shields.io/github/release/Chisanan232/smoothcrawler.svg?label=Release&sort=semver)](https://github.com/Chisanan232/smoothcrawler/releases)
 [![PyPI version](https://badge.fury.io/py/SmoothCrawler.svg)](https://badge.fury.io/py/SmoothCrawler)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/cf25e1acc34a4c44b6b1ac7084cfe7c5)](https://www.codacy.com/gh/Chisanan232/smoothcrawler/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Chisanan232/smoothcrawler&amp;utm_campaign=Badge_Grade)
 
 | OS | Building Status | Coverage Status |
 |------------|------------|--------|
