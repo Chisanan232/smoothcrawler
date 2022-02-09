@@ -14,7 +14,7 @@ from multirunnable import (
     SimpleExecutor,
     SimplePool
 )
-from multirunnable.adapter import Lock, BoundedSemaphore
+from multirunnable.factory import LockFactory, BoundedSemaphoreFactory
 from multipledispatch import dispatch
 import logging
 
@@ -142,11 +142,11 @@ class MultiRunnableCrawler(BaseCrawler):
         :return:
         """
         if lock is True:
-            feature = Lock()
+            feature = LockFactory()
         else:
             if sema_value <= 0:
                 raise ValueError("The number of Semaphore cannot less than or equal to 0.")
-            feature = BoundedSemaphore(value=sema_value)
+            feature = BoundedSemaphoreFactory(value=sema_value)
         return feature
 
 
