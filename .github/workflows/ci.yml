@@ -39,6 +39,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install dependencies by cloning from GitHub MultiRunnable
+        run: |
+          git clone https://github.com/Chisanan232/multirunnable.git -b master ./multirunnable
+          python ./multirunnable/setup.py install
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -52,7 +57,7 @@ jobs:
           pip install requests
           pip install beautifulsoup4
           pip install mysql-connector-python
-          pip install -r requirements.txt
+#          pip install -r requirements.txt
 
       - name: Run tests with pytest
         run: pytest
