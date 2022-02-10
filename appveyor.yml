@@ -90,7 +90,9 @@ install:
   - "%PYTHON%\\python.exe -m pip install requests"
   - "%PYTHON%\\python.exe -m pip install beautifulsoup4"
   - "%PYTHON%\\python.exe -m pip install mysql-connector-python"
-  - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
+#  - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
+  - "git clone https://github.com/Chisanan232/multirunnable.git ./multirunnable"
+  - "python ./multirunnable/setup.py install"
 
 #cache:
 #  - "%TMP%\\py\\"
