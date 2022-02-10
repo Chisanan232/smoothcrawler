@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies by cloning from GitHub MultiRunnable
         run: |
           git clone https://github.com/Chisanan232/multirunnable.git -b master ./multirunnable
-          python ./multirunnable/setup.py install
+          sudo python ./multirunnable/setup.py install
 
       - name: Install Python dependencies
         run: |

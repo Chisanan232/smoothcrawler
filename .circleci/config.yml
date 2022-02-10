@@ -11,7 +11,7 @@ commands:
          name: Install dependencies by cloning from GitHub MultiRunnable
          command: |
              git clone https://github.com/Chisanan232/multirunnable.git -b master ./multirunnable
-             python ./multirunnable/setup.py install
+             sudo python ./multirunnable/setup.py install
       - run:
          name: Upgrade and install Python dependencies
          command: |
