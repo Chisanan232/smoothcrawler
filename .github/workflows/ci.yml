@@ -43,6 +43,7 @@ jobs:
         run: |
           git clone https://github.com/Chisanan232/multirunnable.git -b master ./multirunnable
           sudo python ./multirunnable/setup.py install
+          pip install -r ./multirunnable/dev-requirements.txt
 
       - name: Install Python dependencies
         run: |
