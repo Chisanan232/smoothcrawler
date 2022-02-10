@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="SmoothCrawler",
-    version="0.1.0",
+    version="0.2.0a1.dev1",
     author="Liu, Bryant",
     author_email="chi10211201@cycu.org.tw",
     license="Apache License 2.0",
