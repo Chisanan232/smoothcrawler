@@ -92,7 +92,7 @@ install:
   - "%PYTHON%\\python.exe -m pip install mysql-connector-python"
 #  - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
   - "git clone https://github.com/Chisanan232/multirunnable.git ./multirunnable"
-  - "%PYTHON%\\python.exe ./multirunnable/setup.py install"
+  - "%PYTHON%\\python.exe ./multirunnable/setup.py install --user --prefix="
 
 #cache:
 #  - "%TMP%\\py\\"
