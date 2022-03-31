@@ -7,12 +7,12 @@ commands:
       - run:
          name: Check Python Version
          command: python --version
-      - run:
-         name: Install dependencies by cloning from GitHub MultiRunnable
-         command: |
-             git clone https://github.com/Chisanan232/multirunnable.git -b master ./multirunnable
-             sudo python ./multirunnable/setup.py install
-             pip install -r ./multirunnable/dev-requirements.txt
+#      - run:
+#         name: Install dependencies by cloning from GitHub MultiRunnable
+#         command: |
+#             git clone https://github.com/Chisanan232/multirunnable.git -b master ./multirunnable
+#             sudo python ./multirunnable/setup.py install
+#             pip install -r ./multirunnable/dev-requirements.txt
       - run:
          name: Upgrade and install Python dependencies
          command: |
@@ -26,7 +26,7 @@ commands:
              pip install requests
              pip install beautifulsoup4
              pip install mysql-connector-python
-#             pip install -r requirements.txt
+             pip install -r requirements.txt
       - run:
          name: Run PyTest command to test
          command: |
