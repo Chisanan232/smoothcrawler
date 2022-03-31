@@ -8,7 +8,7 @@ on:
       - master
 
 jobs:
-  build:
+  unit-test:
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -39,11 +39,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies by cloning from GitHub MultiRunnable
-        run: |
-          git clone https://github.com/Chisanan232/multirunnable.git -b master ./multirunnable
-          sudo python ./multirunnable/setup.py install
-          pip install -r ./multirunnable/dev-requirements.txt
+#      - name: Install dependencies by cloning from GitHub MultiRunnable
+#        run: |
+#          git clone https://github.com/Chisanan232/multirunnable.git -b master ./multirunnable
+#          sudo python ./multirunnable/setup.py install
+#          pip install -r ./multirunnable/dev-requirements.txt
 
       - name: Install Python dependencies
         run: |
@@ -58,18 +58,54 @@ jobs:
           pip install requests
           pip install beautifulsoup4
           pip install mysql-connector-python
-#          pip install -r requirements.txt
+          pip install -r requirements.txt
 
       - name: Run tests with pytest
         run: pytest
 
-      - name: Get secret token from base64
-        env:
-          KEYSTORE_BASE64: ${{ secrets.CODECOV_TOKEN }}
+#      - name: Get secret token from base64
+#        env:
+#          KEYSTORE_BASE64: ${{ secrets.CODECOV_TOKEN }}
+#        run: |
+#          echo import certificate from secrets and regenerate the file
+#          echo $KEYSTORE_BASE64 | base64 -d > ./codecov.token
+#
+#      - name: Submit calculation result of testing coverage of project code to codecov
+#        run: codecov -f ./codecov.token    # submit coverage to codecov
+#        continue-on-error: true
+
+      - name: Rename the code coverage result file
+        run: mv ./.coverage ./.coverage.unit-test.${{ matrix.os }}-${{ matrix.python-version }}
+
+      - name: Upload code coverage result file
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: .coverage.unit-test.${{ matrix.os }}-${{ matrix.python-version }}
+          if-no-files-found: error
+
+
+  unit-test-codecov:
+    needs: [unit-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Download code coverage result file
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage
+          path: .coverage.unit-test*
+
+      - name: Install Python tool 'coverage'
         run: |
-          echo import certificate from secrets and regenerate the file
-          echo $KEYSTORE_BASE64 | base64 -d > ./codecov.token
+          python -m pip install --upgrade pip
+          pip install -U pip
+          pip install coverage
 
-      - name: Submit calculation result of testing coverage of project code to codecov
-        run: codecov -f ./codecov.token    # submit coverage to codecov
+      - name: Combine all code coverage result files
+        run: coverage combine .coverage.*
 
+      - name: Display testing coverage of project code
+        run: coverage report -m
