@@ -90,9 +90,9 @@ install:
   - "%PYTHON%\\python.exe -m pip install requests"
   - "%PYTHON%\\python.exe -m pip install beautifulsoup4"
   - "%PYTHON%\\python.exe -m pip install mysql-connector-python"
-#  - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
-  - "git clone https://github.com/Chisanan232/multirunnable.git ./multirunnable"
-  - "%PYTHON%\\python.exe ./multirunnable/setup.py install --user --prefix="
+  - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
+#  - "git clone https://github.com/Chisanan232/multirunnable.git ./multirunnable"
+#  - "%PYTHON%\\python.exe ./multirunnable/setup.py install --user --prefix="
 
 #cache:
 #  - "%TMP%\\py\\"
@@ -110,7 +110,7 @@ build:
 
 test_script:
   # Run the project tests
-  - "%PYTHON%\\python.exe -m pytest"
+  - "%PYTHON%\\python.exe -m pytest test/crawler.py test/factory.py test/urls.py test/components/data_handler.py test/components/httpio.py"
 #  - if not "%GWHEEL_ONLY%"=="true" %PYEXE% -c "import greenlet; print(greenlet, greenlet.__version__)"
 #  - if not "%GWHEEL_ONLY%"=="true" %PYEXE% -c "import gevent.core; print(gevent.core.loop)"
 #  - if not "%GWHEEL_ONLY%"=="true" %PYEXE% -c "import gevent; print(gevent.config.settings['resolver'].get_options())"

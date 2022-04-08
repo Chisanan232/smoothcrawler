@@ -30,7 +30,7 @@ commands:
       - run:
          name: Run PyTest command to test
          command: |
-             pytest
+             pytest test/crawler.py test/factory.py test/urls.py test/components/data_handler.py test/components/httpio.py
       - run:
          name: Submit calculation result of testing coverage of project code to codecov
 #         command: |
