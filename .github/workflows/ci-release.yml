@@ -128,10 +128,10 @@ jobs:
           name: pre-release codecov
           token: ${{ secrets.CODECOV_TOKEN }}   # The token of project MultiRunnable in codecov
           flags: unit-tests, integration-tests    # optional
-          files: .coverage
+          files: './unit-test_coverage_report/.coverage*'
           env_vars: OS,PYTHON
           fail_ci_if_error: true   # optional (default = false)
-#          verbose: true    # optional (default = false)
+          verbose: true    # optional (default = false)
 
       - name: Report testing coverage of project code
         run: coverage report -m
