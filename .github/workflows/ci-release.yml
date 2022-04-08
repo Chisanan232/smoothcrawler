@@ -121,9 +121,6 @@ jobs:
       - name: Combine all code coverage result files
         run: coverage combine ./unit-test_coverage_report/.coverage.*
 
-      - name: Report testing coverage of project code
-        run: coverage report -m
-
       # This usage be refer from https://about.codecov.io/blog/python-code-coverage-using-github-actions-and-codecov/
       - name: Upload testing coverage of project code to Codecov
         uses: codecov/codecov-action@v2
@@ -135,3 +132,6 @@ jobs:
           env_vars: OS,PYTHON
           fail_ci_if_error: true   # optional (default = false)
 #          verbose: true    # optional (default = false)
+
+      - name: Report testing coverage of project code
+        run: coverage report -m
