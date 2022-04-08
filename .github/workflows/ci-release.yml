@@ -130,6 +130,7 @@ jobs:
 #          env_vars: OS,PYTHON
           fail_ci_if_error: true   # optional (default = false)
 #          verbose: true    # optional (default = false)
+          version: "v0.1.15"
 
       - name: Combine all code coverage result files
         run: coverage combine ./unit-test_coverage_report/.coverage.*
