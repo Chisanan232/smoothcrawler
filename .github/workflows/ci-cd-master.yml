@@ -3,18 +3,32 @@ on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
+#  pull_request:
+#    branches:
+#      - master
 
 jobs:
+
+  prep-testbed-unit-test-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - id: set-matrix
+        run: |
+          sudo apt-get install jq
+          echo "::set-output name=matrix::$(bash scripts/get-unit-test-core-paths.sh unix)"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+
   unit-test:
+    needs: prep-testbed-unit-test-core
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
         python-version: [3.6,3.7,3.8,3.9,'3.10']
-        os: [ubuntu-18.04,ubuntu-latest,macos-latest]
+        os: [ubuntu-18.04,ubuntu-latest, macos-10.15,macos-latest]
         exclude:
           - os: ubuntu-18.04
             python-version: 3.6
@@ -26,6 +40,10 @@ jobs:
             python-version: 3.8
           - os: ubuntu-latest
             python-version: 3.9
+          - os: macos-10.15
+            python-version: 3.6
+          - os: macos-10.15
+            python-version: 3.8
           - os: macos-latest
             python-version: 3.6
           - os: macos-latest
@@ -63,25 +81,14 @@ jobs:
       - name: Run tests with pytest
         run: pytest
 
-#      - name: Get secret token from base64
-#        env:
-#          KEYSTORE_BASE64: ${{ secrets.CODECOV_TOKEN }}
-#        run: |
-#          echo import certificate from secrets and regenerate the file
-#          echo $KEYSTORE_BASE64 | base64 -d > ./codecov.token
-#
-#      - name: Submit calculation result of testing coverage of project code to codecov
-#        run: codecov -f ./codecov.token    # submit coverage to codecov
-#        continue-on-error: true
-
       - name: Rename the code coverage result file
-        run: mv ./.coverage ./.coverage.unit-test.${{ matrix.os }}-${{ matrix.python-version }}
+        run: mv ./.coverage ./.coverage.unit-test-core.${{ matrix.os }}-${{ matrix.python-version }}
 
       - name: Upload code coverage result file
         uses: actions/upload-artifact@v3
         with:
           name: coverage
-          path: .coverage.unit-test.${{ matrix.os }}-${{ matrix.python-version }}
+          path: .coverage.unit-test-core.${{ matrix.os }}-${{ matrix.python-version }}
           if-no-files-found: error
 
 
@@ -89,14 +96,11 @@ jobs:
     needs: [unit-test]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
       - name: Download code coverage result file
         uses: actions/download-artifact@v3
         with:
           name: coverage
-          path: .coverage.unit-test*
+          path: .coverage.unit-test-core*
 
       - name: Install Python tool 'coverage'
         run: |
@@ -107,5 +111,5 @@ jobs:
       - name: Combine all code coverage result files
         run: coverage combine .coverage.*
 
-      - name: Display testing coverage of project code
+      - name: Report testing coverage of project code
         run: coverage report -m
