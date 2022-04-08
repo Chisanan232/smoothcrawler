@@ -134,4 +134,4 @@ jobs:
 #          files: .coverage.*
           env_vars: OS,PYTHON
           fail_ci_if_error: true   # optional (default = false)
-          verbose: true    # optional (default = false)
+#          verbose: true    # optional (default = false)
