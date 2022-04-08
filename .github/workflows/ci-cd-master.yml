@@ -48,6 +48,7 @@ jobs:
             python-version: 3.6
           - os: macos-latest
             python-version: 3.9
+        test-path: ${{fromJson(needs.prep-testbed-unit-test-core.outputs.matrix)}}
 
     steps:
       - uses: actions/checkout@v2
@@ -79,7 +80,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests with pytest
-        run: pytest
+        run: pytest ${{ matrix.test-path }}
+        continue-on-error: true
 
       - name: Rename the code coverage result file
         run: mv ./.coverage ./.coverage.unit-test-core.${{ matrix.os }}-${{ matrix.python-version }}
