@@ -118,9 +118,6 @@ jobs:
           pip install -U pip
           pip install coverage
 
-      - name: Combine all code coverage result files
-        run: coverage combine ./unit-test_coverage_report/.coverage.*
-
       # This usage be refer from https://about.codecov.io/blog/python-code-coverage-using-github-actions-and-codecov/
       - name: Upload testing coverage of project code to Codecov
         uses: codecov/codecov-action@v2
@@ -128,10 +125,13 @@ jobs:
           name: pre-release codecov
           token: ${{ secrets.CODECOV_TOKEN }}   # The token of project MultiRunnable in codecov
           flags: unit-tests, integration-tests    # optional
-          files: ./unit-test_coverage_report/.coverage.unit-test-core.ubuntu-latest-3.10
+          files: ./unit-test_coverage_report/.coverage.*
           env_vars: OS,PYTHON
           fail_ci_if_error: true   # optional (default = false)
           verbose: true    # optional (default = false)
+
+      - name: Combine all code coverage result files
+        run: coverage combine ./unit-test_coverage_report/.coverage.*
 
       - name: Report testing coverage of project code
         run: coverage report -m
