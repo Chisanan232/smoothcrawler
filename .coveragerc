@@ -1,6 +1,6 @@
 [run]
-source=
-    ./smoothcrawler
+relative_files = True
+source=./smoothcrawler
 
 omit =
     */__init__.py
