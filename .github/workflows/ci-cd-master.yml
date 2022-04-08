@@ -123,7 +123,7 @@ jobs:
       - name: Upload testing coverage of project code to Codecov
         uses: codecov/codecov-action@v2
         with:
-          name: pre-release codecov
+          name: official release codecov
           token: ${{ secrets.CODECOV_TOKEN }}   # The token of project MultiRunnable in codecov
           flags: unit-tests, integration-tests    # optional
           files: .coverage.*
