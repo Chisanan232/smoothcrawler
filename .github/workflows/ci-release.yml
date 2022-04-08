@@ -135,6 +135,7 @@ jobs:
 #           codecov -n 'pre-release codecov' -e OS,PYTHON -F unit-tests -F  integration-tests -t ${{ secrets.CODECOV_TOKEN }} -v
         uses: codecov/codecov-action@v2
         with:
+          version: "v0.1.15"
           name: pre-release codecov
           token: ${{ secrets.CODECOV_TOKEN }}   # The token of project SmoothCrawler in codecov
           flags: unit-tests, integration-tests    # optional
@@ -142,4 +143,3 @@ jobs:
           env_vars: OS,PYTHON
           fail_ci_if_error: true   # optional (default = false)
           verbose: true    # optional (default = false)
-          version: "v0.1.15"
