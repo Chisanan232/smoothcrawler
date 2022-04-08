@@ -120,16 +120,16 @@ jobs:
 
       # This usage be refer from https://about.codecov.io/blog/python-code-coverage-using-github-actions-and-codecov/
       - name: Upload testing coverage of project code to Codecov
+#        run: codecov -n pre-release codecov -Q github-action-2.1.0 -e OS,PYTHON -Z -f \'./unit-test_coverage_report/.coverage.*\' -F unit-tests -F  integration-tests -C 2b7e1f69b26ad99702de186390b2282773b4aec2 -v
         uses: codecov/codecov-action@v2
         with:
-          name: pre-release codecov
-          token: ${{ secrets.CODECOV_TOKEN }}   # The token of project MultiRunnable in codecov
-          flags: unit-tests, integration-tests    # optional
-          files: '"*"'
-          env_vars: OS,PYTHON
+#          name: pre-release codecov
+          token: ${{ secrets.CODECOV_TOKEN }}   # The token of project SmoothCrawler in codecov
+#          flags: unit-tests, integration-tests    # optional
+          files: '"./unit-test_coverage_report/*"'
+#          env_vars: OS,PYTHON
           fail_ci_if_error: true   # optional (default = false)
-          verbose: true    # optional (default = false)
-        working-directory: ./unit-test_coverage_report
+#          verbose: true    # optional (default = false)
 
       - name: Combine all code coverage result files
         run: coverage combine ./unit-test_coverage_report/.coverage.*
