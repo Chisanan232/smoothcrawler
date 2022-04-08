@@ -110,7 +110,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: coverage
-          path: unit-test_coverage_report/
+          path: ./unit-test_coverage_report/
 
       - name: Install Python tool 'coverage'
         run: |
@@ -120,12 +120,13 @@ jobs:
 
       # This usage be refer from https://about.codecov.io/blog/python-code-coverage-using-github-actions-and-codecov/
       - name: Upload testing coverage of project code to Codecov
+        working-directory: ./unit-test_coverage_report
         uses: codecov/codecov-action@v2
         with:
           name: pre-release codecov
           token: ${{ secrets.CODECOV_TOKEN }}   # The token of project MultiRunnable in codecov
           flags: unit-tests, integration-tests    # optional
-          files: '"./unit-test_coverage_report/.coverage.*"'
+          files: '"*"'
           env_vars: OS,PYTHON
           fail_ci_if_error: true   # optional (default = false)
           verbose: true    # optional (default = false)
