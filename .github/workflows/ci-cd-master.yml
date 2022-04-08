@@ -1,4 +1,4 @@
-name: smoothcrawler testing
+name: SmoothCrawler CI/CD
 on:
   push:
     branches:
@@ -96,6 +96,9 @@ jobs:
     needs: [unit-test]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - name: Download code coverage result file
         uses: actions/download-artifact@v3
         with:
@@ -113,3 +116,15 @@ jobs:
 
       - name: Report testing coverage of project code
         run: coverage report -m
+
+      # This usage be refer from https://about.codecov.io/blog/python-code-coverage-using-github-actions-and-codecov/
+      - name: Upload testing coverage of project code to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          name: pre-release codecov
+          token: ${{ secrets.CODECOV_TOKEN }}   # The token of project MultiRunnable in codecov
+          flags: unit-tests, integration-tests    # optional
+          files: .coverage.*
+          env_vars: OS,PYTHON
+          fail_ci_if_error: true   # optional (default = false)
+          verbose: true    # optional (default = false)
