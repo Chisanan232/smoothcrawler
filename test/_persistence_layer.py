@@ -76,8 +76,8 @@ class StockDao(BaseCrawlerDao):
     __Stock_Table_Name: str = "stock_data_"
     __Database_Config: Dict[str, str] = {}
 
-    def __init__(self, use_pool: bool = False, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, use_pool: bool = False):
+        super().__init__()
         self._use_pool = use_pool
         # self.__database_connection = None
         self.__database_opt = None
@@ -93,16 +93,16 @@ class StockDao(BaseCrawlerDao):
         }
 
 
-    @property
-    def database_opt(self) -> MySQLOperator:
-        if self.__database_opt is None:
-            if self._use_pool is True:
-                __database_connection = MySQLDriverConnectionPool(**self._database_config)
-            else:
-                __database_connection = MySQLSingleConnection(**self._database_config)
-            # self.__db_connection = conn_strategy.connection
-            self.__database_opt = MySQLOperator(conn_strategy=__database_connection)
-        return self.__database_opt
+    def _instantiate_strategy(self) -> MySQLSingleConnection:
+        if self._use_pool is True:
+            __database_connection = MySQLDriverConnectionPool(**self._database_config)
+        else:
+            __database_connection = MySQLSingleConnection(**self._database_config)
+        return __database_connection
+
+
+    def _instantiate_database_opts(self, strategy: MySQLSingleConnection) -> MySQLOperator:
+        return MySQLOperator(conn_strategy=strategy, db_config=self._database_config)
 
 
     def set_config(self, **kwargs) -> None:
@@ -115,7 +115,7 @@ class StockDao(BaseCrawlerDao):
               f"WHERE table_schema = '{database}';"
 
         self.execute(sql)
-        tables = list(self.database_opt.fetch_all())
+        tables = list(self.fetch_all())
         return [t[0] for t in tables]
 
 
@@ -135,7 +135,7 @@ class StockDao(BaseCrawlerDao):
 
         try:
             self.execute(sql)
-            self.database_opt._connection.commit()
+            self.database_opts.commit()
         except DatabaseError as e:
             if e.errno == errorcode.ER_TABLE_EXISTS_ERROR:
                 return True
@@ -178,16 +178,16 @@ class StockDao(BaseCrawlerDao):
               f"VALUES ({data})"
 
         self.execute(sql)
-        self.database_opt._connection.commit()
+        self.database_opts.commit()
 
 
-    def batch_insert(self, stock_symbol: str, data: List[tuple]) -> None:
+    def batch_insert(self, stock_symbol: str, data: Tuple[tuple]) -> None:
         sql = f"" \
               f"INSERT INTO tw_stock.stock_data_{stock_symbol} (stock_date, trade_volume, turnover_price, opening_price, highest_price, lowest_price, closing_price, gross_spread, turnover_volume) " \
               f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
-        self.database_opt.execute_many(sql, data)
-        self.database_opt._connection.commit()
+        self.execute_many(sql, data)
+        self.database_opts.commit()
 
 
 
