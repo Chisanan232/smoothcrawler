@@ -1,17 +1,19 @@
 # SmoothCrawler
 
 [![Supported Versions](https://img.shields.io/pypi/pyversions/smoothcrawler.svg?logo=python&logoColor=FBE072)](https://pypi.org/project/smoothcrawler)
-[![Release](https://img.shields.io/github/release/Chisanan232/smoothcrawler.svg?label=Release&sort=semver)](https://github.com/Chisanan232/smoothcrawler/releases)
+[![Release](https://img.shields.io/github/release/Chisanan232/SmoothCrawler.svg?label=Release&sort=semver)](https://github.com/Chisanan232/SmoothCrawler/releases)
 [![PyPI version](https://badge.fury.io/py/SmoothCrawler.svg)](https://badge.fury.io/py/SmoothCrawler)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/cf25e1acc34a4c44b6b1ac7084cfe7c5)](https://www.codacy.com/gh/Chisanan232/smoothcrawler/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Chisanan232/smoothcrawler&amp;utm_campaign=Badge_Grade)
 
 | OS | Building Status | Coverage Status |
 |------------|------------|--------|
-| Linux |[![Build Status](https://app.travis-ci.com/Chisanan232/smoothcrawler.svg?branch=master)](https://app.travis-ci.com/Chisanan232/smoothcrawler)|Deprecated|
-| Linux |[![CircleCI](https://circleci.com/gh/Chisanan232/smoothcrawler.svg?style=shield)](https://app.circleci.com/pipelines/github/Chisanan232/smoothcrawler)|[![codecov](https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT)](https://codecov.io/gh/Chisanan232/smoothcrawler)|
-| Linux/MacOS |[![Run Python Tests](https://github.com/Chisanan232/smoothcrawler/actions/workflows/ci.yml/badge.svg)](https://github.com/Chisanan232/smoothcrawler/actions/workflows/ci.yml)|[![codecov](https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT)](https://codecov.io/gh/Chisanan232/smoothcrawler)|
+| Linux/MacOS |[![SmoothCrawler CI/CD](https://github.com/Chisanan232/smoothcrawler/actions/workflows/ci-cd-master.yml/badge.svg)](https://github.com/Chisanan232/smoothcrawler/actions/workflows/ci-cd-master.yml)|[![codecov](https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT)](https://codecov.io/gh/Chisanan232/smoothcrawler)|
 | Windows |[![Build status](https://ci.appveyor.com/api/projects/status/1eri78jtxvu5r0q2?svg=true)](https://ci.appveyor.com/project/Chisanan232/smoothcrawler)|[![Coverage Status](https://coveralls.io/repos/github/Chisanan232/smoothcrawler/badge.svg?branch=master)](https://coveralls.io/github/Chisanan232/smoothcrawler?branch=master)|
+
+[comment]: <> (| Linux |[![Build Status]&#40;https://app.travis-ci.com/Chisanan232/smoothcrawler.svg?branch=master&#41;]&#40;https://app.travis-ci.com/Chisanan232/smoothcrawler&#41;|Deprecated|)
+
+[comment]: <> (| Linux |[![CircleCI]&#40;https://circleci.com/gh/Chisanan232/smoothcrawler.svg?style=shield&#41;]&#40;https://app.circleci.com/pipelines/github/Chisanan232/smoothcrawler&#41;|[![codecov]&#40;https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT&#41;]&#40;https://codecov.io/gh/Chisanan232/smoothcrawler&#41;|)
 
 A Python package for building crawler humanly as different roles.
 
