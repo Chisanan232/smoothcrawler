@@ -120,7 +120,7 @@ test_script:
 
 after_test:
 #  - "%PYTHON%\\python.exe -m codecov -t $CODECOV_TOKEN"
-  - "%PYTHON%\\python.exe -m coveralls"
+  - "coveralls"
 
 #artifacts:
 #  # Archive the generated wheel package in the ci.appveyor.com build report.
