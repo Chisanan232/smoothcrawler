@@ -1,11 +1,16 @@
-name: SmoothCrawler CI/CD
+name: CI by 'release'
 on:
   push:
     branches:
-      - master
-#  pull_request:
-#    branches:
-#      - master
+      - "release"
+      - "release-**"
+      - "release/**"
+  pull_request:
+    branches:
+      - "release"
+      - "release-**"
+      - "release/**"
+
 
 jobs:
 
@@ -105,16 +110,17 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: coverage
-          path: .coverage.unit-test-core*
+          path: ./unit-test_coverage_report/
 
       - name: Install Python tool 'coverage'
         run: |
           python -m pip install --upgrade pip
           pip install -U pip
           pip install coverage
+          pip install codecov
 
       - name: Combine all code coverage result files
-        run: coverage combine .coverage.*
+        run: coverage combine ./unit-test_coverage_report/.coverage.*
 
       - name: Report testing coverage of project code
         run: coverage report -m
@@ -124,13 +130,13 @@ jobs:
 
       # This usage be refer from https://about.codecov.io/blog/python-code-coverage-using-github-actions-and-codecov/
       - name: Upload testing coverage of project code to Codecov
-        uses: codecov/codecov-action@v2
 #        run: |
 #           codecov -n 'pre-release codecov' -e OS,PYTHON -F unit-tests -F  integration-tests -t ${{ secrets.CODECOV_TOKEN }} -v
+        uses: codecov/codecov-action@v2
         with:
           version: "v0.1.15"
-          name: official release codecov
-          token: ${{ secrets.CODECOV_TOKEN }}   # The token of project MultiRunnable in codecov
+          name: pre-release codecov
+          token: ${{ secrets.CODECOV_TOKEN }}   # The token of project SmoothCrawler in codecov
           flags: unit-tests, integration-tests    # optional
           files: coverage.xml
           env_vars: OS,PYTHON
