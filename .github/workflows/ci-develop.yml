@@ -133,8 +133,8 @@ jobs:
           if-no-files-found: error
 
 
-  codecov_finish:
-    needs: generate_coverage_report
+  codacy_finish:
+    needs: unit-test-codecov
     runs-on: ubuntu-latest
     steps:
       - name: Download testing coverage report
