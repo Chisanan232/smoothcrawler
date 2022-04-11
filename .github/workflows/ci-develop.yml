@@ -123,7 +123,6 @@ jobs:
       - name: Generate testing report for Codacy
         run: |
           coverage xml
-          mv ./coverage.xml ./cobertura.xml
 
       - name: Upload testing coverage report
         uses: actions/upload-artifact@v3
