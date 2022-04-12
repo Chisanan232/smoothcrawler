@@ -121,8 +121,7 @@ jobs:
         run: coverage report -m
 
       - name: Generate testing report for Codacy
-        run: |
-          coverage xml
+        run: coverage xml
 
       - name: Upload testing coverage report
         uses: actions/upload-artifact@v3
