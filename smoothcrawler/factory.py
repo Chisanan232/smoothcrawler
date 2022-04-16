@@ -1,10 +1,11 @@
+from typing import TypeVar, Generic
 from abc import ABCMeta, abstractmethod
-from typing import Any, TypeVar, Generic
 
 from .components.httpio import HTTP, AsyncHTTP
 from .components.data import (
     BaseHTTPResponseParser, BaseDataHandler,
-    BaseAsyncHTTPResponseParser, BaseAsyncDataHandler)
+    BaseAsyncHTTPResponseParser, BaseAsyncDataHandler
+)
 from .persistence import PersistenceFacade
 
 

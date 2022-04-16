@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
-from multirunnable.persistence.database import BaseSingleConnection, BaseConnectionPool, DatabaseOperator, BaseDao
 from multirunnable.persistence.database.strategy import get_connection_pool
+from multirunnable.persistence.database import BaseSingleConnection, BaseConnectionPool, DatabaseOperator, BaseDao
+from abc import ABC, abstractmethod
 
 
 

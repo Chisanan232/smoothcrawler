@@ -1,7 +1,7 @@
-from abc import ABCMeta, abstractmethod
-from typing import List, Tuple, Iterable, Union, Optional
 from multipledispatch import dispatch
-from datetime import date, datetime, timedelta
+from typing import List, Tuple, Iterable, Union, Optional
+from datetime import datetime, timedelta
+from abc import ABCMeta, abstractmethod
 import logging
 import re
 

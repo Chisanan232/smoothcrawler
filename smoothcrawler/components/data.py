@@ -1,6 +1,6 @@
-from abc import ABCMeta, abstractmethod
+from typing import TypeVar, Generic
 from http import HTTPStatus
-from typing import List, Dict, TypeVar, Generic, Union, Any
+from abc import ABCMeta, abstractmethod
 
 
 T = TypeVar("T")
