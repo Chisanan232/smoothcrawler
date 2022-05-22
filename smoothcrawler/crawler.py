@@ -1,11 +1,3 @@
-from smoothcrawler.persistence import PersistenceFacade as _PersistenceFacade
-from smoothcrawler.components.httpio import BaseHTTP as _BaseHttpIo
-from smoothcrawler.components.data import (
-    BaseHTTPResponseParser as _BaseHTTPResponseParser,
-    BaseDataHandler as _BaseDataHandler
-)
-from smoothcrawler.factory import BaseFactory, CrawlerFactory, AsyncCrawlerFactory
-
 from multipledispatch import dispatch
 from multirunnable.factory import LockFactory, BoundedSemaphoreFactory
 from multirunnable import RunningMode, SimpleExecutor, SimplePool
@@ -13,6 +5,14 @@ from typing import List, Iterable, Any, Union, Optional, Callable
 from queue import Queue
 from abc import ABCMeta
 import logging
+
+from .persistence import PersistenceFacade as _PersistenceFacade
+from .components.httpio import BaseHTTP as _BaseHttpIo
+from .components.data import (
+    BaseHTTPResponseParser as _BaseHTTPResponseParser,
+    BaseDataHandler as _BaseDataHandler
+)
+from .factory import BaseFactory, CrawlerFactory, AsyncCrawlerFactory
 
 
 RunAsParallel = RunningMode.Parallel
