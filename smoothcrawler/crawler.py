@@ -10,7 +10,8 @@ from .persistence import PersistenceFacade as _PersistenceFacade
 from .components.httpio import BaseHTTP as _BaseHttpIo
 from .components.data import (
     BaseHTTPResponseParser as _BaseHTTPResponseParser,
-    BaseDataHandler as _BaseDataHandler
+    BaseDataHandler as _BaseDataHandler,
+    BaseAsyncDataHandler as _BaseAsyncDataHandler
 )
 from .factory import BaseFactory, CrawlerFactory, AsyncCrawlerFactory
 
@@ -27,8 +28,49 @@ class BaseCrawler(metaclass=ABCMeta):
     _Data_Handler: _BaseDataHandler = None
     _Persistence: _PersistenceFacade = None
 
-    def __init__(self, factory: BaseFactory):
-        self._factory = factory
+    def __init__(self, factory: BaseFactory = None):
+        """
+        Define some basically functions to all crawlers.
+
+        :param factory: The BaseFactory object which would provides each different factories to
+        crawler uses like send HTTP request, parse HTTP response, etc.
+        """
+
+        if factory is None:
+            self._factory = self._initial_factory()
+        else:
+            self._factory = factory
+
+
+    def _initial_factory(self) -> BaseFactory:
+        """
+        Initial BaseFactory object. This function would be called if value of option *factory* of __init__ is None.
+
+        :return: CrawlerFactory instance.
+        """
+
+        return CrawlerFactory()
+
+
+    def register_factory(self,
+                         http_req_sender: _BaseHttpIo = None,
+                         http_resp_parser: _BaseHTTPResponseParser = None,
+                         data_process: Union[_BaseDataHandler, _BaseAsyncDataHandler] = None,
+                         persistence: _PersistenceFacade = None) -> None:
+        """
+        Register SmoothCrawler's component(s) to CrawlerFactory instance.
+
+        :param http_req_sender: The *Sender* component sends HTTP request.
+        :param http_resp_parser: The *Parser* component handles HTTP response.
+        :param data_process: The *Handler* component handles data process which be generated from HTTP response.
+        :param persistence: The *Persistence* component response of saving data.
+        :return: None
+        """
+
+        self._factory.http_factory = http_req_sender
+        self._factory.parser_factory = http_resp_parser
+        self._factory.data_handling_factory = data_process
+        self._factory.persistence_factory = persistence
 
 
     def crawl(self,
@@ -89,6 +131,7 @@ class MultiRunnableCrawler(BaseCrawler):
         """
         Description:
             Handling the crawler process with List which saving URLs.
+
         :param method:
         :param url:
         :param retry:
@@ -96,6 +139,7 @@ class MultiRunnableCrawler(BaseCrawler):
         :param kwargs:
         :return:
         """
+
         _handled_data = []
         for _target_url in url:
             parsed_response = self.crawl(method=method, url=_target_url)
@@ -164,10 +208,18 @@ class MultiRunnableCrawler(BaseCrawler):
 
 class AsyncSimpleCrawler(MultiRunnableCrawler):
 
-    def __init__(self, executors: int, factory: AsyncCrawlerFactory):
+    def __init__(self, executors: int, factory: AsyncCrawlerFactory = None):
         super(AsyncSimpleCrawler, self).__init__(factory=factory)
         self.__executor_number = executors
         self.__executor = SimpleExecutor(mode=RunningMode.Asynchronous, executors=executors)
+
+
+    def _initial_factory(self) -> AsyncCrawlerFactory:
+        """
+        Initial asynchronous version of BaseFactory object --- AsyncCrawlerFactory.
+        :return: AsyncCrawlerFactory instance.
+        """
+        return AsyncCrawlerFactory()
 
 
     async def crawl(self,
