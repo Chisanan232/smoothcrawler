@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Type, Any
 from abc import ABCMeta, abstractmethod
 
 from .components.httpio import HTTP, AsyncHTTP
@@ -7,6 +7,21 @@ from .components.data import (
     BaseAsyncHTTPResponseParser, BaseAsyncDataHandler
 )
 from .persistence import PersistenceFacade
+
+
+class FactoryTypeError(TypeError):
+
+    def __init__(self, factory: object, factory_type: object):
+        self.__factory = factory
+        self.__factory_type = factory_type
+
+    def __str__(self):
+        return f"The factory object {self.__factory} should extends {self.__factory_type.__class__} and implements its rules functions."
+
+
+def _chk_factory_type(__factory: object, __class: Any):
+    if __factory is not None and isinstance(__factory, __class) is False:
+        raise FactoryTypeError(factory=__factory, factory_type=__class)
 
 
 T = TypeVar("T")
@@ -20,9 +35,21 @@ class BaseFactory(metaclass=ABCMeta):
         pass
 
 
+    @http_factory.setter
+    @abstractmethod
+    def http_factory(self, factory: Generic[T]) -> None:
+        pass
+
+
     @property
     @abstractmethod
     def parser_factory(self) -> Generic[T]:
+        pass
+
+
+    @parser_factory.setter
+    @abstractmethod
+    def parser_factory(self, factory: Generic[T]) -> None:
         pass
 
 
@@ -32,9 +59,21 @@ class BaseFactory(metaclass=ABCMeta):
         pass
 
 
+    @data_handling_factory.setter
+    @abstractmethod
+    def data_handling_factory(self, factory: Generic[T]) -> None:
+        pass
+
+
     @property
     @abstractmethod
     def persistence_factory(self) -> Generic[T]:
+        pass
+
+
+    @persistence_factory.setter
+    @abstractmethod
+    def persistence_factory(self, factory: Generic[T]) -> None:
         pass
 
 
@@ -55,6 +94,7 @@ class CrawlerFactory(BaseFactory):
 
     @http_factory.setter
     def http_factory(self, factory: HTTP) -> None:
+        _chk_factory_type(factory, HTTP)
         self.__http_factory = factory
 
 
@@ -65,6 +105,7 @@ class CrawlerFactory(BaseFactory):
 
     @parser_factory.setter
     def parser_factory(self, factory: BaseHTTPResponseParser) -> None:
+        _chk_factory_type(factory, BaseHTTPResponseParser)
         self.__response_parser_factory = factory
 
 
@@ -75,6 +116,7 @@ class CrawlerFactory(BaseFactory):
 
     @data_handling_factory.setter
     def data_handling_factory(self, factory: BaseDataHandler) -> None:
+        _chk_factory_type(factory, BaseDataHandler)
         self.__data_handling_factory = factory
 
 
@@ -85,6 +127,7 @@ class CrawlerFactory(BaseFactory):
 
     @persistence_factory.setter
     def persistence_factory(self, factory: PersistenceFacade) -> None:
+        _chk_factory_type(factory, PersistenceFacade)
         self.__persistence_factory = factory
 
 
@@ -105,6 +148,7 @@ class AsyncCrawlerFactory(BaseFactory):
 
     @http_factory.setter
     def http_factory(self, factory: AsyncHTTP) -> None:
+        _chk_factory_type(factory, AsyncHTTP)
         self.__http_factory = factory
 
 
@@ -115,6 +159,7 @@ class AsyncCrawlerFactory(BaseFactory):
 
     @parser_factory.setter
     def parser_factory(self, factory: BaseAsyncHTTPResponseParser) -> None:
+        _chk_factory_type(factory, BaseAsyncHTTPResponseParser)
         self.__response_parser_factory = factory
 
 
@@ -125,6 +170,7 @@ class AsyncCrawlerFactory(BaseFactory):
 
     @data_handling_factory.setter
     def data_handling_factory(self, factory: BaseAsyncDataHandler) -> None:
+        _chk_factory_type(factory, BaseAsyncDataHandler)
         self.__data_handling_factory = factory
 
 
@@ -135,5 +181,6 @@ class AsyncCrawlerFactory(BaseFactory):
 
     @persistence_factory.setter
     def persistence_factory(self, factory: PersistenceFacade) -> None:
+        _chk_factory_type(factory, PersistenceFacade)
         self.__persistence_factory = factory
 
