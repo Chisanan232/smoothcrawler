@@ -1,7 +1,7 @@
 from multipledispatch import dispatch
 from multirunnable.factory import LockFactory, BoundedSemaphoreFactory
 from multirunnable import RunningMode, SimpleExecutor, SimplePool
-from typing import List, Iterable, Any, Union, Optional, Callable
+from typing import List, Iterable, Any, TypeVar, Union, Optional, Generic, Callable
 from queue import Queue
 from abc import ABCMeta
 import logging
@@ -19,6 +19,8 @@ from .factory import BaseFactory, CrawlerFactory, AsyncCrawlerFactory
 RunAsParallel = RunningMode.Parallel
 RunAsConcurrent = RunningMode.Concurrent
 RunAsCoroutine = RunningMode.GreenThread
+
+T = TypeVar("T")
 
 
 class BaseCrawler(metaclass=ABCMeta):
@@ -78,9 +80,62 @@ class BaseCrawler(metaclass=ABCMeta):
               url: str,
               retry: int = 1,
               *args, **kwargs) -> Any:
+        """
+        Crawl web data process. It would send HTTP request, receive HTTP response and
+        parse the content here. It ONLY does it, doesn't do anything else.
+
+        :param method: HTTP method.
+        :param url: URL.
+        :param retry: How many it would retry to send HTTP request if it gets fail when sends request.
+        :param args:
+        :param kwargs:
+        :return: The result which it has parsed from HTTP response. The data type is Any.
+        """
+
+        response = self.send_http_request(method=method, url=url, retry=retry, *args, **kwargs)
+        parsed_response = self.parse_http_response(response=response)
+        return parsed_response
+
+
+    def send_http_request(self, method: str, url: str, retry: int = 1, *args, **kwargs) -> Generic[T]:
+        """
+        Send HTTP request.
+        It could override this function to implement your own customized logic to send HTTP request.
+
+        :param method: HTTP method.
+        :param url: URL.
+        :param retry: How many it would retry to send HTTP request if it gets fail when sends request.
+        :param args:
+        :param kwargs:
+        :return: A HTTP response object.
+        """
+
         response = self._factory.http_factory.request(method=method, url=url, timeout=retry, *args, **kwargs)
+        return response
+
+
+    def parse_http_response(self, response: Generic[T]) -> Generic[T]:
+        """
+        Parse the HTTP response.
+        It could override this function to implement your own customized logic to parse HTTP response.
+
+        :param response: The HTTP response.
+        :return: The result which it has parsed from HTTP response. The data type is Generic[T].
+        """
+
         parsed_response = self._factory.parser_factory.parse_content(response=response)
         return parsed_response
+
+
+    def persist(self, data: Any) -> None:
+        """
+        Persist the data.
+        It could override this function to implement your own customized logic to save data.
+
+        :param data:
+        :return: None
+        """
+        self._factory.persistence_factory.save(data=data)
 
 
 
@@ -88,6 +143,14 @@ class SimpleCrawler(BaseCrawler):
 
     @dispatch(str, str)
     def run(self, method: str, url: str) -> Optional[Any]:
+        """
+        It would crawl the data and do some data process after it get the HTTP response.
+
+        :param method:
+        :param url:
+        :return:
+        """
+
         parsed_response = self.crawl(method=method, url=url)
         data = self._factory.data_handling_factory.process(result=parsed_response)
         return data
@@ -104,8 +167,16 @@ class SimpleCrawler(BaseCrawler):
 
 
     def run_and_save(self, method: str, url: Union[str, list]) -> None:
+        """
+        It would
+
+        :param method:
+        :param url:
+        :return:
+        """
+
         _result = self.run(method, url)
-        self._factory.persistence_factory.save(data=_result)
+        self.persist(data=_result)
 
 
 
@@ -163,6 +234,7 @@ class MultiRunnableCrawler(BaseCrawler):
         :param kwargs:
         :return:
         """
+
         _handled_data = []
         while url.empty() is False:
             _target_url = url.get()
@@ -181,6 +253,7 @@ class MultiRunnableCrawler(BaseCrawler):
         :param sema_value:
         :return:
         """
+
         if lock is True:
             feature = LockFactory()
         else:
@@ -199,6 +272,7 @@ class MultiRunnableCrawler(BaseCrawler):
         :param executor_number:
         :return:
         """
+
         urls_len = len(urls)
         urls_interval = int(urls_len / executor_number)
         urls_list_collection = [urls[i:i + urls_interval] for i in range(0, executor_number, urls_interval)]
