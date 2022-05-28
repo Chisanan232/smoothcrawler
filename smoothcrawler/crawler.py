@@ -157,11 +157,11 @@ class SimpleCrawler(BaseCrawler):
     @dispatch(str, str)
     def run(self, method: str, url: str) -> Optional[Any]:
         """
-        It would crawl the data and do some data process after it get the HTTP response.
+        It would crawl the data and do some data process for the parsed HTTP response object.
 
-        :param method:
-        :param url:
-        :return:
+        :param method: HTTP method.
+        :param url: URL. It only one URL here.
+        :return: The result of data process.
         """
 
         parsed_response = self.crawl(method=method, url=url)
@@ -171,6 +171,15 @@ class SimpleCrawler(BaseCrawler):
 
     @dispatch(str, list)
     def run(self, method: str, url: List[str]) -> Optional[List]:
+        """
+        This's the overload function of previous one. The only different is: this is handling
+        with a collection of URLs and previous one handles only one.
+
+        :param method: HTTP method.
+        :param url: URLs. It could receive a collection of URLs.
+        :return: The result of data process.
+        """
+
         result = []
         for _target_url in url:
             parsed_response = self.crawl(method=method, url=_target_url)
@@ -181,11 +190,11 @@ class SimpleCrawler(BaseCrawler):
 
     def run_and_save(self, method: str, url: Union[str, list]) -> None:
         """
-        It would
+        In addiction to crawl and handle the data from web, it persist the data.
 
-        :param method:
-        :param url:
-        :return:
+        :param method: HTTP method.
+        :param url: One or more URLs (a collection of URLs).
+        :return: None
         """
 
         _result = self.run(method, url)
