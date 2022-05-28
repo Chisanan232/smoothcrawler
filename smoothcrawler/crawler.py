@@ -127,6 +127,19 @@ class BaseCrawler(metaclass=ABCMeta):
         return parsed_response
 
 
+    def data_process(self, parsed_response: Generic[T]) -> Generic[T]:
+        """
+        The data process to handle the data which has been parsed from HTTP response object.
+        It could override this function to implement your own customized logic to do data process.
+
+        :param parsed_response: The data which has been parsed from HTTP response object.
+        :return: The result of data process. The data type is Generic[T].
+        """
+
+        data = self._factory.data_handling_factory.process(result=parsed_response)
+        return data
+
+
     def persist(self, data: Any) -> None:
         """
         Persist the data.
@@ -152,7 +165,7 @@ class SimpleCrawler(BaseCrawler):
         """
 
         parsed_response = self.crawl(method=method, url=url)
-        data = self._factory.data_handling_factory.process(result=parsed_response)
+        data = self.data_process(parsed_response=parsed_response)
         return data
 
 
@@ -161,7 +174,7 @@ class SimpleCrawler(BaseCrawler):
         result = []
         for _target_url in url:
             parsed_response = self.crawl(method=method, url=_target_url)
-            data = self._factory.data_handling_factory.process(result=parsed_response)
+            data = self.data_process(parsed_response=parsed_response)
             result.append(data)
         return result
 
@@ -214,7 +227,7 @@ class MultiRunnableCrawler(BaseCrawler):
         _handled_data = []
         for _target_url in url:
             parsed_response = self.crawl(method=method, url=_target_url)
-            _handled_data_row = self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data_row = self.data_process(parsed_response=parsed_response)
             _handled_data.append(_handled_data_row)
         return _handled_data
 
@@ -239,7 +252,7 @@ class MultiRunnableCrawler(BaseCrawler):
         while url.empty() is False:
             _target_url = url.get()
             parsed_response = self.crawl(method=method, url=_target_url)
-            _handled_data_row = self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data_row = self.data_process(parsed_response=parsed_response)
             _handled_data.append(_handled_data_row)
         return _handled_data
 
@@ -324,7 +337,7 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
         _handled_data = []
         for _target_url in url:
             parsed_response = await self.crawl(method=method, url=_target_url, retry=retry)
-            _handled_data_row = await self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data_row = await self.data_process(parsed_response=parsed_response)
             _handled_data.append(_handled_data_row)
         return _handled_data
 
@@ -348,7 +361,7 @@ class AsyncSimpleCrawler(MultiRunnableCrawler):
         while url.empty() is False:
             _target_url = await url.get()
             parsed_response = await self.crawl(method=method, url=_target_url, retry=retry)
-            _handled_data_row = await self._factory.data_handling_factory.process(result=parsed_response)
+            _handled_data_row = await self.data_process(parsed_response=parsed_response)
             _handled_data.append(_handled_data_row)
         return _handled_data
 
