@@ -41,7 +41,6 @@ Asynchronous Simple Crawler
 ----------------------------
 
 .. autoclass:: smoothcrawler.crawler.AsyncSimpleCrawler
-    :private-members: _initial_factory
    :inherited-members:
 
 
