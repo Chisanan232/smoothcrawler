@@ -65,6 +65,8 @@ components to a different crawler object. However, some components could be reus
 again and again if it needs for different crawlers. In the other hand, it could freak
 easily change one (or more) specific component(s) to other one(s).
 
+.. _About Important:
+
 .. important::
 
     *SmoothCrawler* provides a software architecture to everyone to follow. In the other
