@@ -318,38 +318,48 @@ difficult, this must be a best way to you.
 Implement different crawler to face different scenario
 ======================================================
 
-content ...
+In addiction to the Soc of *SmoothCrawler*, **crawler role** is another special feature
+of *SmoothCrawler*. *SmoothCrawler* provides several different **crawler role** for
+different scenarios.
 
 
 SimpleCrawler
 ---------------
 
-content ...
+This is the simplest crawler role in *SmoothCrawler*. In generally, it could satisfy almost
+simple requirements.
+
+.. code-block:: python
+
+    from smoothcrawler.crawler import SimpleCrawler
+
+    # Crawler Role: Simple Crawler
+    sc = SimpleCrawler(factory=self._cf)
+    data = sc.run("GET", Test_URL_TW_Stock)
+    print(f"[DEBUG] data: {data}")
 
 
 AsyncSimpleCrawler
 ---------------------
 
-content ...
+This crawler role would run the tasks **asynchronously**. So the option *url* of its
+function *run* should be a collection of URLs or Queue object.
 
 .. code-block:: python
 
     from smoothcrawler.crawler import AsyncSimpleCrawler
     from smoothcrawler.urls import URL
 
+    Test_URL_TW_Stock_With_Option = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={date}&stockNo=2330"
 
-content ...
-
-.. code-block:: python
-
-    # Crawler Role: Asynchronous Simple Crawler
-    sc = AsyncSimpleCrawler(factory=self._acf, executors=2)
-
+    # Generate URLs
     url = URL(base=Test_Example_URL_With_Option, start="20210801", end="20211001", formatter="yyyymmdd")
     url.set_period(days=31, hours=0, minutes=0, seconds=0)
     target_urls = url.generate()
     print(f"Target URLs: {target_urls}")
 
+    # Crawler Role: Asynchronous Simple Crawler
+    sc = AsyncSimpleCrawler(factory=self._acf, executors=2)
     data = sc.run("GET", target_urls)
     print(f"[DEBUG] data: {data}")
 
@@ -357,27 +367,26 @@ content ...
 ExecutorCrawler
 -----------------
 
-content ...
+This crawler role could run the tasks as multiple threads (*RunAsConcurrent*), green threads
+(*RunAsCoroutine*) or processes (*RunAsParallel*) by the option *mode* in instantiating object.
+Therefore its option *url* of its function *run* should be a collection of URLs or Queue object.
 
 .. code-block:: python
 
     from smoothcrawler.crawler import RunAsConcurrent, ExecutorCrawler
     from smoothcrawler.urls import URL
 
+    Test_URL_TW_Stock_With_Option = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={date}&stockNo=2330"
 
-content ...
-
-.. code-block:: python
-
-    # Crawler Role: Executor Crawler
-    sc = ExecutorCrawler(factory=self._cf, mode=RunAsConcurrent, executors=3)
-
+    # Generate URLs
     url = URL(base=Test_Example_URL_With_Option, start="20210801", end="20211001", formatter="yyyymmdd")
     url.set_period(days=31, hours=0, minutes=0, seconds=0)
     target_urls = url.generate()
     print(f"Target URLs: {target_urls}")
 
-    data = sc.run(method="GET", url=target_urls, lock=False, sema_value=3)
+    # Crawler Role: Executor Crawler
+    sc = ExecutorCrawler(factory=self._cf, mode=RunAsConcurrent, executors=3)
+    data = sc.run(method="GET", url=target_urls)
     print(f"[DEBUG] data: {data}")
     for d in data:
         print(f"[DEBUG] pid: {d.pid}")
@@ -390,29 +399,33 @@ content ...
 PoolCrawler
 -------------
 
-content ...
+This crawler role is almost same as *ExecutorCrawler* but it manage runnable object by *Pool*.
 
 .. code-block:: python
 
     from smoothcrawler.crawler import RunAsParallel, PoolCrawler
     from smoothcrawler.urls import URL
 
+    Test_URL_TW_Stock_With_Option = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={date}&stockNo=2330"
 
-content ...
-
-.. code-block:: python
+    # Generate URLs
+    url = URL(base=Test_Example_URL_With_Option, start="20210801", end="20211001", formatter="yyyymmdd")
+    url.set_period(days=31, hours=0, minutes=0, seconds=0)
+    target_urls = url.generate()
+    print(f"Target URLs: {target_urls}")
 
     # # Crawler Role: Pool Crawler
     with PoolCrawler(factory=self._cf, mode=RunAsParallel, pool_size=5) as pc:
-        pc.init(lock=False, sema_value=3)
-        data = pc.async_apply(method="GET", urls=[Test_Example_URL_With_Option])
+        data = pc.async_apply(method="GET", urls=url)
         print(f"[DEBUG] data: {data}")
         for d in data:
             print(f"[DEBUG] data: {d.data}")
             print(f"[DEBUG] is_successful: {d.is_successful}")
 
 
-content ...
+Above all are the introduction of each different crawler role of *SmoothCrawler*.
+Besides combination of different components be needed, crawler role is also a key
+point to let developments of web spider be extremely varied with *SmoothCrawler*.
 
 
 .. |example-web-page| image:: ./images/example_web_page.png
