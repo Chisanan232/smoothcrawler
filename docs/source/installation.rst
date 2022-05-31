@@ -2,6 +2,8 @@
 Installation
 =============
 
+.. _pip install smoothcrawler:
+
 Install by pip
 ===============
 
@@ -24,6 +26,8 @@ Developer could easily implement web spider parallelism with them. The principle
 is it implements parallelism with another Python library --- *MultiRunnable*. So
 *MultiRunnable* is the necessary dependency of *SmoothCrawler*.
 
+
+.. _Related Dependencies in usage:
 
 Related Dependencies in usage with SmoothCrawler
 =================================================
