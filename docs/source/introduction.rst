@@ -54,6 +54,8 @@ Finally, from above all info, we could draw a activity sequence diagram with det
 
 |activity-sequence-diagram-detail|
 
+.. _different components responsible of different task:
+
 Let's clear them with lanes pool diagram to display the relation between each processes and
 objects (classes) with activity sequence diagram:
 
