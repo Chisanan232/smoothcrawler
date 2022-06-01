@@ -32,6 +32,11 @@ class BaseFactory(metaclass=ABCMeta):
     @property
     @abstractmethod
     def http_factory(self) -> Generic[T]:
+        """
+        A property for component HTTP sender.
+
+        :return: HTTP sender instance. It should be HTTP or AsyncHTTP type object.
+        """
         pass
 
 
@@ -44,6 +49,11 @@ class BaseFactory(metaclass=ABCMeta):
     @property
     @abstractmethod
     def parser_factory(self) -> Generic[T]:
+        """
+        A property for component HTTP response parser.
+
+        :return: HTTP sender instance. It should be BaseHTTPResponseParser or BaseAsyncHTTPResponseParser type object.
+        """
         pass
 
 
@@ -56,6 +66,11 @@ class BaseFactory(metaclass=ABCMeta):
     @property
     @abstractmethod
     def data_handling_factory(self) -> Generic[T]:
+        """
+        A property for component data processing.
+
+        :return: HTTP sender instance. It should be BaseDataHandler or BaseAsyncDataHandler type object.
+        """
         pass
 
 
@@ -68,6 +83,11 @@ class BaseFactory(metaclass=ABCMeta):
     @property
     @abstractmethod
     def persistence_factory(self) -> Generic[T]:
+        """
+        A property for component persistence.
+
+        :return: HTTP sender instance. It should be PersistenceFacade type object.
+        """
         pass
 
 
