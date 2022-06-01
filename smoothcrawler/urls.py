@@ -7,29 +7,72 @@ import re
 
 
 OPTION_VAR_INDEX: str = "index"
+"""The option setting character of index."""
+
 OPTION_VAR_DATE: str = "date"
+"""The option setting character of date."""
+
 OPTION_VAR_DATETIME: str = "datetime"
+"""The option setting character of datetime."""
+
 OPTION_VAR_ITERATOR: str = "iterator"
+"""The option setting character of iterator."""
 
 
 def get_option() -> Tuple:
+    """
+    Get all types of option which could be write in URL character.
+
+    :return: A tuple of all option types.
+    """
+
     return OPTION_VAR_INDEX, OPTION_VAR_DATE, OPTION_VAR_DATETIME, OPTION_VAR_ITERATOR
 
 
 def set_index_rule() -> str:
+    """
+    Get the index option.
+    The index option would iterate to generate URLs with index (1, 2, 3, ...).
+
+    :return: The setting string of index option.
+    """
+
     return OPTION_VAR_INDEX
 
 
 def set_date_rule() -> str:
+    """
+    Get the date option. In generally, it's yyyymmdd. It only has year, month and day.
+    It could iterator to generate  URLs with date (for example, 20210101, 20210102, ...).
+
+    :return: The setting string of date option.
+    """
+
     return OPTION_VAR_DATE
 
 
 def set_datetime_rule() -> str:
+    """
+    Get the datetime option. In generally, it's yyyymmddhhMMss. It has year, month, day,
+    hour, minute and second.
+    It could iterator to generate  URLs with datetime (for example, 20210101000000, 20210101000001, ...).
+
+    :return: The setting string of datetime option.
+    """
+
     return OPTION_VAR_DATETIME
 
 
 def set_iterator_rule() -> str:
+    """
+    Get the iterator option.
+    It could iterator to generate  URLs with target iterator object.
+
+    :return: The setting string of iterator option.
+    """
+
     return OPTION_VAR_ITERATOR
+
 
 
 class BaseURL(metaclass=ABCMeta):
@@ -38,14 +81,12 @@ class BaseURL(metaclass=ABCMeta):
     @abstractmethod
     def base_url(self) -> str:
         """
-        Description:
-            The URL (or API) which is the target to crawl but it's still
-            not the entire valid URL. For example, it's maybe like
-            'http://www.test.com', also maybe like 'http://www.test.com?date={date}' .
-            For first one, it's a valid URL and we could get some data which we need.
-            But for second one, it's just a URL format it should be but
-            it's not valid, we still should know the option 'date'.
-        :return:
+        An URL value. It could contain one of specific options (OPTION_VAR_INDEX, OPTION_VAR_DATE,
+        OPTION_VAR_DATETIME and OPTION_VAR_ITERATOR) and it would be generated with the option meaning
+        value. For example, it could set *base_url* as 'https://www.google.com?date={date}'. The
+        URL be generated would be like 'https://www.google.com?date=20220601'.
+
+        :return: An URL string value.
         """
         pass
 
@@ -53,9 +94,9 @@ class BaseURL(metaclass=ABCMeta):
     @abstractmethod
     def generate(self) -> List[str]:
         """
-        Description:
-            Generating all the URLs we need base on the options.
-        :return:
+        Generating all the URLs we need base on the options.
+
+        :return: A collection of URLs.
         """
         pass
 
@@ -105,22 +146,52 @@ class URL(BaseURL):
 
 
     def is_index_rule(self) -> bool:
+        """
+        Check the option setting of current URL object is index type.
+
+        :return: It returns True if it is, or it returns False.
+        """
+
         return self.option_is_index is not None
 
 
     def is_date_rule(self) -> bool:
+        """
+        Check the option setting of current URL object is date type.
+
+        :return: It returns True if it is, or it returns False.
+        """
+
         return self.option_is_date is not None
 
 
     def is_datetime_rule(self) -> bool:
+        """
+        Check the option setting of current URL object is datetime type.
+
+        :return: It returns True if it is, or it returns False.
+        """
+
         return self.option_is_datetime is not None
 
 
     def is_iterator_rule(self) -> bool:
+        """
+        Check the option setting of current URL object is iterator type.
+
+        :return: It returns True if it is, or it returns False.
+        """
+
         return self.option_is_iterator is not None
 
 
     def is_valid(self) -> bool:
+        """
+        Check the option setting of current URL object is valid.
+
+        :return: It returns True if it is, or it returns False.
+        """
+
         return self.is_index_rule() or \
                self.is_date_rule() or \
                self.is_datetime_rule() or \
@@ -129,25 +200,59 @@ class URL(BaseURL):
 
     @property
     def period_days(self) -> int:
+        """
+        Get the day value of period.
+
+        :return: Return day value and it's a int type data.
+        """
+
         return self._period_days
 
 
     @property
     def period_hours(self) -> int:
+        """
+        Get the hour value of period.
+
+        :return: Return hour value and it's a int type data.
+        """
+
         return self._period_hours
 
 
     @property
     def period_minutes(self) -> int:
+        """
+        Get the minute value of period.
+
+        :return: Return minute value and it's a int type data.
+        """
+
         return self._period_minutes
 
 
     @property
     def period_seconds(self) -> int:
+        """
+        Get the second value of period.
+
+        :return: Return second value and it's a int type data.
+        """
+
         return self._period_seconds
 
 
     def set_period(self, days: Optional[int] = None, hours: Optional[int] = None, minutes: Optional[int] = None, seconds: Optional[int] = None) -> None:
+        """
+        Configure the period settings like how many days, hours, minutes or seconds.
+
+        :param days: How many days to iterate next value.
+        :param hours: How many hours to iterate next value.
+        :param minutes: How many minutes to iterate next value.
+        :param seconds: How many seconds to iterate next value.
+        :return: None
+        """
+
         if days is not None:
             self._period_days = days
         if hours is not None:
@@ -229,6 +334,13 @@ class URL(BaseURL):
 
 
     def _index_handling(self, index: int) -> None:
+        """
+        The main process to generate URL with index.
+
+        :param index: The index value. It should be a started number.
+        :return: None
+        """
+
         if index <= self.end:
             option = URL._add_flag(option=OPTION_VAR_INDEX)
             target_url = self.base_url.replace(option, str(index))
@@ -238,6 +350,29 @@ class URL(BaseURL):
 
     @staticmethod
     def _is_py_datetime_format(formatter: str) -> bool:
+        """
+        Check whether the character format of datetime formatter is valid or not.
+
+        :param formatter: The character format of datetime formatter. It's usage could refer below:
+
+                                    +-----------+------------+
+                                    | Formatter |   Meaning  |
+                                    +===========+============+
+                                    |    %Y     |     year   |
+                                    +-----------+------------+
+                                    |    %m     |    month   |
+                                    +-----------+------------+
+                                    |    %d     |     day    |
+                                    +-----------+------------+
+                                    |    %H     |     hour   |
+                                    +-----------+------------+
+                                    |    %M     |    minute  |
+                                    +-----------+------------+
+                                    |    %S     |    second  |
+                                    +-----------+------------+
+
+        :return: It returns True if the character format of datetime formatter is valid, or it return False.
+        """
 
         def chk_char(t_ele) -> bool:
             res = re.search(r"[Y,m,d,H,M,S]", t_ele)
@@ -259,14 +394,15 @@ class URL(BaseURL):
     @staticmethod
     def _convert_formatter(formatter: str) -> str:
         """
-        Description:
-            About parameter *formatter*, it could be like below:
-            1. yyyymmdd, example: 20210101
-            2. yyyy/mm/dd, example: 2021/01/01
-            3. yyyy-mm-dd, example: 2021-01-01
-        :param formatter:
-        :return:
+        About parameter *formatter*, it could be like below:
+        1. yyyymmdd, example: 20210101
+        2. yyyy/mm/dd, example: 2021/01/01
+        3. yyyy-mm-dd, example: 2021-01-01
+
+        :param formatter: The character format of datetime formatter.
+        :return: A string type value which be formatted with the date or datetime format.
         """
+
         year_format = re.search(r"yyyy", formatter, re.IGNORECASE)
         month_format = re.search(r"mm", formatter)
         day_format = re.search(r"dd", formatter, re.IGNORECASE)
@@ -327,6 +463,14 @@ class URL(BaseURL):
 
 
     def _date_handling(self, _date: datetime, days: int) -> None:
+        """
+        The main process to generate URL with date.
+
+        :param _date: A datetime object.
+        :param days: How many days to iterate next value.
+        :return: None
+        """
+
         if _date <= self._end_date:
             date_option_val = _date.strftime("%Y%m%d").replace("-", "")
 
@@ -339,6 +483,17 @@ class URL(BaseURL):
 
 
     def _datetime_handling(self, _datetime: datetime, days: int = None, hours: int=None, minutes: int=None, seconds: int=None) -> None:
+        """
+        The main process to generate URL with datetime.
+
+        :param _datetime:
+        :param days: How many days to iterate next value.
+        :param hours: How many hours to iterate next value.
+        :param minutes: How many minutes to iterate next value.
+        :param seconds: How many seconds to iterate next value.
+        :return: None
+        """
+
         if _datetime <= self._end_date:
             date_option_val = _datetime.isoformat().replace("-", "")
             date_option_val = date_option_val.replace(":", "")
@@ -354,6 +509,14 @@ class URL(BaseURL):
 
     @dispatch((list, tuple, set))
     def _iterator_handling(self, iter: Union[list, tuple, set]) -> None:
+        """
+        The main process to generate URL with iterator. This overload function run process
+        if the option *iter* is *list*, *tuple* or *set* type.
+
+        :param iter: A iterator. It could be a *list*, *tuple* or *set* type.
+        :return: None
+        """
+
         for ele in iter:
             option = URL._add_flag(option=OPTION_VAR_ITERATOR)
             target_url = self.base_url.replace(option, str(ele))
@@ -364,6 +527,8 @@ class URL(BaseURL):
     def _iterator_handling(self, iter: dict) -> None:
         """
         Description:
+            The main process to generate URL with iterator. This overload function run process
+        if the option *iter* is *dict* type.
             It could all data content which be saved in received parameter
             combine the key and value as HTTP GET method format options.
 
@@ -373,8 +538,8 @@ class URL(BaseURL):
             Result:
                 index_1=1, index_2=2
 
-        :param iter:
-        :return:
+        :param iter: A iterator. It could be a *dict type.
+        :return: None
         """
         for key, val in iter.items():
             option = URL._add_flag(option=OPTION_VAR_ITERATOR)
@@ -384,6 +549,13 @@ class URL(BaseURL):
 
     @staticmethod
     def _add_flag(option: str) -> str:
+        """
+        Get the character with the option and the specific format it defines.
+
+        :param option: The option setting.
+        :return: A string value.
+        """
+
         return "{" + option + "}"
 
 
