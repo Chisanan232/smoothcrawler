@@ -22,7 +22,7 @@ The core concept of its implementation is SoC (Separation of Concerns).
 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: General documentation:
 
    introduction
@@ -34,11 +34,10 @@ The core concept of its implementation is SoC (Separation of Concerns).
    :maxdepth: 2
    :caption: API Reference:
 
-   Crawler </api_reference/crawler.rst>
    URL </api_reference/url.rst>
-   HTTP Factory </api_reference/http_handler.rst>
-   Data Factory </api_reference/data_handler.rst>
-   Persistence Factory </api_reference/persistence.rst>
+   Crawler </api_reference/crawler.rst>
+   Factory </api_reference/factory.rst>
+   Components </api_reference/components.rst>
 
 
 
