@@ -163,6 +163,11 @@ class AsyncCrawlerFactory(BaseFactory):
 
     @property
     def http_factory(self) -> AsyncHTTP:
+        """
+        A property for component asynchronous version of HTTP sender.
+
+        :return: HTTP sender instance. It should be HTTP or AsyncHTTP type object.
+        """
         return self.__http_factory
 
 
@@ -174,6 +179,11 @@ class AsyncCrawlerFactory(BaseFactory):
 
     @property
     def parser_factory(self) -> BaseAsyncHTTPResponseParser:
+        """
+        A property for component asynchronous version of HTTP response parser.
+
+        :return: HTTP sender instance. It should be BaseHTTPResponseParser or BaseAsyncHTTPResponseParser type object.
+        """
         return self.__response_parser_factory
 
 
@@ -185,6 +195,11 @@ class AsyncCrawlerFactory(BaseFactory):
 
     @property
     def data_handling_factory(self) -> BaseAsyncDataHandler:
+        """
+        A property for component asynchronous version of data processing.
+
+        :return: HTTP sender instance. It should be BaseDataHandler or BaseAsyncDataHandler type object.
+        """
         return self.__data_handling_factory
 
 
@@ -196,6 +211,11 @@ class AsyncCrawlerFactory(BaseFactory):
 
     @property
     def persistence_factory(self) -> PersistenceFacade:
+        """
+        A property for component asynchronous version of persistence.
+
+        :return: HTTP sender instance. It should be PersistenceFacade type object.
+        """
         return self.__persistence_factory
 
 
