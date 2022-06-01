@@ -5,13 +5,6 @@ Factory
 content ...
 
 
-BaseFactory
-------------
-
-.. autoclass:: smoothcrawler.factory.BaseFactory
-   :members:
-
-
 CrawlerFactory
 ---------------
 
