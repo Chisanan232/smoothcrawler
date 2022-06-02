@@ -4,7 +4,12 @@ Crawlers
 
 *module* smoothcrawler.crawler
 
-Introduce what is 'crawler role' ...
+Here are the module which has many different **Crawler roles** for different scenarios.
+They also are the 'final production' which combines the needed components as web spider
+and uses that features.
+
+So **components** implement what it works at each processes, **crawler role** implement
+how it works with its components.
 
 
 Framework Modules
