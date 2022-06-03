@@ -1,12 +1,12 @@
 from typing import TypeVar, Generic, Type, Any
 from abc import ABCMeta, abstractmethod
 
+from .components.persistence import PersistenceFacade
 from .components.httpio import HTTP, AsyncHTTP
 from .components.data import (
     BaseHTTPResponseParser, BaseDataHandler,
     BaseAsyncHTTPResponseParser, BaseAsyncDataHandler
 )
-from .persistence import PersistenceFacade
 
 
 class FactoryTypeError(TypeError):

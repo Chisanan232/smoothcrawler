@@ -6,7 +6,7 @@ from queue import Queue
 from abc import ABCMeta
 import logging
 
-from .persistence import PersistenceFacade as _PersistenceFacade
+from .components.persistence import PersistenceFacade as _PersistenceFacade
 from .components.httpio import BaseHTTP as _BaseHttpIo
 from .components.data import (
     BaseHTTPResponseParser as _BaseHTTPResponseParser,
