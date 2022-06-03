@@ -59,25 +59,23 @@ Note:
 
 """
 from multirunnable.persistence.database.strategy import BaseDatabaseConnection
-from smoothcrawler.persistence.database import BaseCrawlerDao
-from smoothcrawler.persistence.file import BaseCrawlerFao, SavingStrategy, SavingMediator
+from multirunnable.persistence.database.layer import BaseDao
+from multirunnable.persistence.file.layer import BaseFao
 
-from mysql_impl import MySQLSingleConnection, MySQLDriverConnectionPool, MySQLOperator
+from .mysql_impl import MySQLSingleConnection, MySQLDriverConnectionPool, MySQLOperator
 
-from mysql.connector import MySQLConnection, errorcode
-from mysql.connector.errors import DatabaseError, PoolError
+from mysql.connector import errorcode
+from mysql.connector.errors import DatabaseError
 from typing import List, Tuple, Dict, Union
-import re
 
 
 
-class StockDao(BaseCrawlerDao):
+class StockDao(BaseDao):
 
     __Stock_Table_Name: str = "stock_data_"
     __Database_Config: Dict[str, str] = {}
 
     def __init__(self, db_driver: str = None, use_pool: bool = False, **kwargs):
-        super().__init__()
         self._db_driver = db_driver
         self._use_pool = use_pool
         # self.__database_connection = None
@@ -92,6 +90,8 @@ class StockDao(BaseCrawlerDao):
             "password": "password",
             "database": "tw_stock"
         }
+
+        super().__init__()
 
 
     def _instantiate_strategy(self) -> BaseDatabaseConnection:
@@ -216,21 +216,6 @@ class StockDao(BaseCrawlerDao):
 
 
 
-class StockFao(BaseCrawlerFao):
-
-    def __init__(self, strategy: SavingStrategy, **kwargs):
-        super().__init__(strategy=strategy, **kwargs)
-        self.__mediator = SavingMediator()
-        self.__strategy = strategy
-
-
-    def save(self, formatter: str, file: str, mode: str, data):
-        if re.search(r"csv", formatter, re.IGNORECASE) is not None:
-            self.save_as_csv(file=file, mode=mode, data=data)
-        elif re.search(r"xlsx", formatter, re.IGNORECASE) or re.search(r"excel", formatter, re.IGNORECASE):
-            self.save_as_excel(file=file, mode=mode, data=data)
-        elif re.search(r"json", formatter, re.IGNORECASE):
-            self.save_as_json(file=file, mode=mode, data=data)
-        else:
-            raise ValueError(f"It doesn't support the file format '{formatter}'.")
+class StockFao(BaseFao):
+    pass
 

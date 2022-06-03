@@ -3,12 +3,13 @@ from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 from smoothcrawler.urls import URL
 
 from example.components.http_sender import Urllib3HTTPRequest, RequestsHTTPRequest, AsyncHTTPRequest
+from example.components.persistence import StockDataPersistenceLayer
 from .http_parser import Urllib3StockHTTPResponseParser, RequestsStockHTTPResponseParser, StockAsyncHTTPResponseParser
 from .data_handler import StockDataHandler, StockAsyncDataHandler
 
 
 HTTP_METHOD = "GET"
-Test_URL_TW_Stock = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210801&stockNo=2330"
+Test_URL_TW_Stock = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210101&stockNo=8454"
 Test_URL_TW_Stock_With_Option = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={date}&stockNo=2330"
 
 
@@ -20,11 +21,13 @@ class StockCrawlerImpl:
         self._cf.http_factory = Urllib3HTTPRequest()
         self._cf.parser_factory = Urllib3StockHTTPResponseParser()
         self._cf.data_handling_factory = StockDataHandler()
+        self._cf.persistence_factory = StockDataPersistenceLayer()
 
         self._acf = AsyncCrawlerFactory()
         self._acf.http_factory = AsyncHTTPRequest()
         self._acf.parser_factory = StockAsyncHTTPResponseParser()
         self._acf.data_handling_factory = StockAsyncDataHandler()
+        self._cf.persistence_factory = StockDataPersistenceLayer()
 
 
     def run_as_simple_crawler(self):
@@ -34,6 +37,7 @@ class StockCrawlerImpl:
         sc = SimpleCrawler(factory=self._cf)
         data = sc.run("GET", Test_URL_TW_Stock)
         print(f"[DEBUG] data: {data}")
+        # sc.run_and_save("GET", Test_URL_TW_Stock)
 
 
     def run_as_async_simple_crawler(self):
