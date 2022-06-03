@@ -494,7 +494,7 @@ class ExecutorCrawler(MultiRunnableCrawler):
         if type(url) is list:
             urls_len = len(url)
             if urls_len <= self.__executor_number:
-                logging.warning(f"It will have some idle executors deosn't be activated because target URLs amount more than executor number.")
+                logging.warning("It will have some idle executors deosn't be activated because target URLs amount more than executor number.")
                 logging.warning(f"URLs amount: {urls_len}")
                 logging.warning(f"Executor number: {self.__executor_number}")
                 _result = self.map(method=method, url=url, retry=retry, lock=lock, sema_value=sema_value)
