@@ -6,8 +6,8 @@ from ._components import (
     Urllib3HTTPRequest, AsyncHTTPRequest,
     Urllib3HTTPResponseParser, AsyncHTTPResponseParser,
     ExampleWebDataHandler, ExampleWebAsyncDataHandler,
-    DataFilePersistenceLayer,
-    DataDatabasePersistenceLayer)
+    DataFilePersistenceLayer
+)
 
 
 @pytest.fixture(scope="function")
