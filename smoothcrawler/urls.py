@@ -270,7 +270,7 @@ class URL(BaseURL):
                 raise ValueError("Options *start* and *end* cannot be empty value with INDEX rule.")
 
             if type(self.start) is not int or type(self.end) is not int:
-                logging.warning(f"The types of start index and end index aren't 'int'. It will try to convert to 'int' type.")
+                logging.warning("The types of start index and end index aren't 'int'. It will try to convert to 'int' type.")
                 try:
                     self.start = int(self.start)
                     self.end = int(self.end)
