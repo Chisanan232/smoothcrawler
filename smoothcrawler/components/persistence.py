@@ -9,20 +9,12 @@ class PersistenceFacade(metaclass=ABCMeta):
 
     @abstractmethod
     def save(self, data: Union[Iterable, Any], *args, **kwargs) -> Generic[T]:
+        """
+        Save the data, no matter save it as one specific file format or insert into database.
+
+        :param data: The target data which would be saved. In generally, it's an iterator object.
+        :return: In generally, it doesn't return anything. But it does if it needs.
+        """
+
         pass
-
-
-
-class BaseCrawlerFao(PersistenceFacade, ABC):
-
-    __File = None
-
-    def save(self, data, file: str = "", mode: str = "a+", encoding: str = "utf-8") -> None:
-        self.__File.file_path = file
-        self.__File.mode = mode
-        self.__File.encoding = encoding
-
-        self.__File.open()
-        self.__File.write(data=data)
-        self.__File.close()
 

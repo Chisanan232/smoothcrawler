@@ -96,18 +96,13 @@ BaseAsyncDataHandler
 Persistence
 =============
 
-*module* smoothcrawler.persistence
+*module* smoothcrawler.components.persistence
 
 Persist data as one specific file format or into database.
 
-File
------
+PersistenceFacade
+------------------
 
-content ...
-
-
-Database
----------
-
-content ...
+.. autoclass:: smoothcrawler.components.persistence.PersistenceFacade
+   :members:
 
