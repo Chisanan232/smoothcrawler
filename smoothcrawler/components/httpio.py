@@ -179,17 +179,17 @@ class HTTP(BaseHTTP):
                           method: Union[str, HTTPMethod] = "GET",
                           timeout: int = 1,
                           *args, **kwargs) -> Any:
-        if re.search(f"get", method, re.IGNORECASE) or method is HTTPMethod.GET:
+        if re.search(r"get", method, re.IGNORECASE) or method is HTTPMethod.GET:
             response = self.get(url, *args, **kwargs)
-        elif re.search(f"post", method, re.IGNORECASE) or method is HTTPMethod.POST:
+        elif re.search(r"post", method, re.IGNORECASE) or method is HTTPMethod.POST:
             response = self.post(url, *args, **kwargs)
-        elif re.search(f"put", method, re.IGNORECASE) or method is HTTPMethod.PUT:
+        elif re.search(r"put", method, re.IGNORECASE) or method is HTTPMethod.PUT:
             response = self.put(url, *args, **kwargs)
-        elif re.search(f"delete", method, re.IGNORECASE) or method is HTTPMethod.DELETE:
+        elif re.search(r"delete", method, re.IGNORECASE) or method is HTTPMethod.DELETE:
             response = self.delete(url, *args, **kwargs)
-        elif re.search(f"head", method, re.IGNORECASE) or method is HTTPMethod.HEAD:
+        elif re.search(r"head", method, re.IGNORECASE) or method is HTTPMethod.HEAD:
             response = self.head(url, *args, **kwargs)
-        elif re.search(f"option", method, re.IGNORECASE) or method is HTTPMethod.OPTION:
+        elif re.search(r"option", method, re.IGNORECASE) or method is HTTPMethod.OPTION:
             response = self.option(url, *args, **kwargs)
         else:
             response = TypeError(f"Invalid HTTP method it got: '{method.upper()}'.")
@@ -335,17 +335,17 @@ class AsyncHTTP(BaseHTTP):
                                 method: Union[str, HTTPMethod] = "GET",
                                 timeout: int = 1,
                                 *args, **kwargs) -> Generic[HTTPResponse]:
-        if re.search(f"get", method, re.IGNORECASE) or method is HTTPMethod.GET:
+        if re.search(r"get", method, re.IGNORECASE) or method is HTTPMethod.GET:
             response = await self.get(url, *args, **kwargs)
-        elif re.search(f"post", method, re.IGNORECASE) or method is HTTPMethod.POST:
+        elif re.search(r"post", method, re.IGNORECASE) or method is HTTPMethod.POST:
             response = await self.post(url, *args, **kwargs)
-        elif re.search(f"put", method, re.IGNORECASE) or method is HTTPMethod.PUT:
+        elif re.search(r"put", method, re.IGNORECASE) or method is HTTPMethod.PUT:
             response = await self.put(url, *args, **kwargs)
-        elif re.search(f"delete", method, re.IGNORECASE) or method is HTTPMethod.DELETE:
+        elif re.search(r"delete", method, re.IGNORECASE) or method is HTTPMethod.DELETE:
             response = await self.delete(url, *args, **kwargs)
-        elif re.search(f"head", method, re.IGNORECASE) or method is HTTPMethod.HEAD:
+        elif re.search(r"head", method, re.IGNORECASE) or method is HTTPMethod.HEAD:
             response = await self.head(url, *args, **kwargs)
-        elif re.search(f"option", method, re.IGNORECASE) or method is HTTPMethod.OPTION:
+        elif re.search(r"option", method, re.IGNORECASE) or method is HTTPMethod.OPTION:
             response = await self.option(url, *args, **kwargs)
         else:
             response = TypeError(f"Invalid HTTP method it got: '{method.upper()}'.")
