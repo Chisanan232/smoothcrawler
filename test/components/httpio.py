@@ -46,7 +46,7 @@ class _TestRequestsHTTP(HTTP):
     __Http_Response = None
 
     def request(self, url, method="GET", timeout=-1, *args, **kwargs):
-        Test_Http_Logger.info(f"Send HTTP request by 'urllib3'.")
+        Test_Http_Logger.info("Send HTTP request by 'urllib3'.")
         _http = urllib3.PoolManager()
         self.__Http_Response = _http.request(HTTP_METHOD, url)
         return self.__Http_Response
@@ -217,14 +217,14 @@ class _TestRetryRequestsHTTP(HTTP):
 
     def before_request(self, *args, **kwargs):
         global Initial_Flag
-        print(f"[DEBUG in _TestRetryRequestsHTTP.before_request_new]")
+        print("[DEBUG in _TestRetryRequestsHTTP.before_request_new]")
         Initial_Flag += 1
         Test_Http_Logger.info("Initial task process.")
 
 
     def request_done(self, result):
         global Done_Flag
-        print(f"[DEBUG in _TestRetryRequestsHTTP.request_done_new]")
+        print("[DEBUG in _TestRetryRequestsHTTP.request_done_new]")
         Done_Flag += 1
         Test_Http_Logger.info("Task done! ")
         return result
@@ -232,7 +232,7 @@ class _TestRetryRequestsHTTP(HTTP):
 
     def request_fail(self, error: Exception):
         global Exception_Flag
-        print(f"[DEBUG in _TestRetryRequestsHTTP.request_fail_new]")
+        print("[DEBUG in _TestRetryRequestsHTTP.request_fail_new]")
         Exception_Flag += 1
         Test_Http_Logger.info("Got failure when run task.")
         return error
@@ -240,7 +240,7 @@ class _TestRetryRequestsHTTP(HTTP):
 
     def request_final(self):
         global Final_Flag
-        print(f"[DEBUG in _TestRetryRequestsHTTP.request_final_new]")
+        print("[DEBUG in _TestRetryRequestsHTTP.request_final_new]")
         Final_Flag += 1
         Test_Http_Logger.info("Task done! ")
 
@@ -250,7 +250,7 @@ class _TestRetryRequestsHTTP(HTTP):
         if self.__Http_Response:
             return self.__Http_Response.status
         else:
-            Test_Http_Logger.warning(f"There is no HTTP response currently.")
+            Test_Http_Logger.warning("There is no HTTP response currently.")
             return -1
 
 
