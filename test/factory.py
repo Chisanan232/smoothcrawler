@@ -27,7 +27,7 @@ class TestCrawlerFactory:
 
         try:
             crawler_factory.http_factory = _http_req
-        except Exception as e:
+        except Exception:
             assert False, f"It should set the factory via property finely."
         else:
             assert True, f"It works."
@@ -40,7 +40,7 @@ class TestCrawlerFactory:
 
         try:
             crawler_factory.parser_factory = _response_parser
-        except Exception as e:
+        except Exception:
             assert False, f"It should set the factory via property finely."
         else:
             assert True, f"It works."
@@ -53,7 +53,7 @@ class TestCrawlerFactory:
 
         try:
             crawler_factory.data_handling_factory = _data_handler
-        except Exception as e:
+        except Exception:
             assert False, f"It should set the factory via property finely."
         else:
             assert True, f"It works."
@@ -66,7 +66,7 @@ class TestCrawlerFactory:
 
         try:
             crawler_factory.persistence_factory = _persistence_handler
-        except Exception as e:
+        except Exception:
             assert False, f"It should set the factory via property finely."
         else:
             assert True, f"It works."
@@ -81,7 +81,7 @@ class TestAsyncCrawlerFactory:
 
         try:
             async_crawler_factory.http_factory = _http_req
-        except Exception as e:
+        except Exception:
             assert False, f"It should set the factory via property finely."
         else:
             assert True, f"It works."
@@ -94,7 +94,7 @@ class TestAsyncCrawlerFactory:
 
         try:
             async_crawler_factory.parser_factory = _response_parser
-        except Exception as e:
+        except Exception:
             assert False, f"It should set the factory via property finely."
         else:
             assert True, f"It works."
@@ -107,7 +107,7 @@ class TestAsyncCrawlerFactory:
 
         try:
             async_crawler_factory.data_handling_factory = _data_handler
-        except Exception as e:
+        except Exception:
             assert False, f"It should set the factory via property finely."
         else:
             assert True, f"It works."
@@ -120,7 +120,7 @@ class TestAsyncCrawlerFactory:
 
         try:
             async_crawler_factory.persistence_factory = _persistence_handler
-        except Exception as e:
+        except Exception:
             assert False, f"It should set the factory via property finely."
         else:
             assert True, f"It works."
