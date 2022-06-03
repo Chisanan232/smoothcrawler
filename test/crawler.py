@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar, Generic
+from typing import TypeVar
 import pytest
 
 from smoothcrawler.crawler import (
@@ -8,17 +8,15 @@ from smoothcrawler.crawler import (
     AsyncSimpleCrawler,
     ExecutorCrawler,
     PoolCrawler,
-    RunAsParallel, RunAsConcurrent, RunAsCoroutine)
+    RunAsConcurrent, RunAsCoroutine)
 from smoothcrawler.urls import URL
 from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 
 from ._components import (
-    # MyRetry,
     Urllib3HTTPRequest, RequestsHTTPRequest, AsyncHTTPRequest,
     Urllib3HTTPResponseParser, RequestsHTTPResponseParser, AsyncHTTPResponseParser,
-    ExampleWebDataHandler, ExampleWebAsyncDataHandler,
-    DataFilePersistenceLayer,
-    DataDatabasePersistenceLayer)
+    ExampleWebDataHandler, ExampleWebAsyncDataHandler
+)
 
 
 T = TypeVar("T")
