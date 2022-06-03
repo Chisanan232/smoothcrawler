@@ -1,4 +1,4 @@
-from abc import ABCMeta, ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import Union, TypeVar, Generic, Iterable, Any
 
 
