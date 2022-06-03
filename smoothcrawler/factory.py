@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Type, Any
+from typing import TypeVar, Generic, Any
 from abc import ABCMeta, abstractmethod
 
 from .components.persistence import PersistenceFacade
