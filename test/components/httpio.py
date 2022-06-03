@@ -45,7 +45,7 @@ class _TestRequestsHTTP(HTTP):
 
     __Http_Response = None
 
-    def request(self, url, method="GET", timeout=-1, retry_components=None, *args, **kwargs):
+    def request(self, url, method="GET", timeout=-1, *args, **kwargs):
         Test_Http_Logger.info(f"Send HTTP request by 'urllib3'.")
         _http = urllib3.PoolManager()
         self.__Http_Response = _http.request(HTTP_METHOD, url)
@@ -262,7 +262,7 @@ class _TestRetryRequestsHTTP(HTTP):
 class BaseHttpTestSpec(metaclass=ABCMeta):
     """
     Test Description:
-        Testing method 'request' feature, including parameter 'method', 'timeout', 'retry_components'
+        Testing method 'request' feature, including parameter 'method', 'timeout'
 
     Test cases:
         Parameter 'url':
