@@ -4,9 +4,9 @@
 #                                                (_
 
 __title__ = "SmoothCrawler"
-__description__ = "Build crawler as LOGO."
+__description__ = "Build crawler humanly as different roles which be combined with different components."
 __url__ = "https://smoothcrawler.readthedocs.io"
-__version__ = "0.2.0a1"
+__version__ = "0.2.0"
 __author__ = "Liu, Bryant"
 __author_email__ = "chi10211201@cycu.org.tw"
 __license__ = "Apache License 2.0"
