@@ -1,4 +1,4 @@
-from smoothcrawler.components.httpio import BaseHTTP, HTTP, AsyncHTTP
+from smoothcrawler.components.httpio import HTTP
 from abc import ABCMeta, abstractmethod
 import urllib3
 import logging
