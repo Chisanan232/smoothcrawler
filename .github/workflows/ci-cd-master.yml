@@ -107,11 +107,16 @@ jobs:
           name: coverage
           path: .coverage.unit-test-core*
 
+      - name: Setup Python 3.10 in Ubuntu OS
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
       - name: Install Python tool 'coverage'
         run: |
-          python -m pip install --upgrade pip
-          pip install -U pip
-          pip install coverage
+          python3 -m pip install --upgrade pip
+          pip3 install -U pip
+          pip3 install coverage
 
       - name: Combine all code coverage result files
         run: coverage combine .coverage.*
@@ -189,27 +194,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Setup Python 3.10 in Ubuntu OS
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -U pip
-          pip install -U setuptools
-          pip install wheel
+          python3 -m pip install --upgrade pip
+          pip3 install -U pip
+          pip3 install -U setuptools
+          pip3 install wheel
 
       - name: Install MultiRunnable with by setup.py
         run: |
-          python setup.py install --user || exit 1
+          python3 setup.py install --user || exit 1
 
       - name: Show the Python package information
-        run: pip show smoothcrawler
+        run: pip3 show smoothcrawler
 
       - name: Test to run script with package 'multirunnable' in command lines
         run: |
           import smoothcrawler as mr
-        shell: python
+          from smoothcrawler.crawler import SimpleCrawler
+          from smoothcrawler.components.data import BaseHTTPResponseParser, BaseDataHandler
+        shell: python3
 
       - name: Test to run script with package 'multirunnable' with Python file
-        run: python ./scripts/sc_script.py
+        run: python3 ./scripts/test_crawler.py
 
 
   build_package:
