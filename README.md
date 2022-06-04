@@ -37,7 +37,7 @@ How about a library to build a **crawler system**?
 
 Every crawler should do mostly same things and procedures:
 
-![image](https://github.com/Chisanan232/smoothcrawler/tree/master/docs/sources/images/Work_Process(Briefly).drawio.png)
+![image](https://github.com/Chisanan232/smoothcrawler/tree/master/docs/source/images/Work_Process(Briefly).drawio.png)
 
 In generally, a crawler code usually be unstable and even be difficult (e.g. parsing a complex HTML elements content). 
 So it's keeping facing many challenges when you're developing web spider, much less maintain the crawler program (for 
