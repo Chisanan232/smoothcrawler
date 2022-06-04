@@ -63,12 +63,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-#      - name: Install dependencies by cloning from GitHub MultiRunnable
-#        run: |
-#          git clone https://github.com/Chisanan232/multirunnable.git -b master ./multirunnable
-#          sudo python ./multirunnable/setup.py install
-#          pip install -r ./multirunnable/dev-requirements.txt
-
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -112,12 +106,17 @@ jobs:
           name: coverage
           path: ./unit-test_coverage_report/
 
+      - name: Setup Python 3.10 in Ubuntu OS
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
       - name: Install Python tool 'coverage'
         run: |
-          python -m pip install --upgrade pip
-          pip install -U pip
-          pip install coverage
-          pip install codecov
+          python3 -m pip install --upgrade pip
+          pip3 install -U pip
+          pip3 install coverage
+          pip3 install codecov
 
       - name: Combine all code coverage result files
         run: coverage combine ./unit-test_coverage_report/.coverage.*
@@ -128,11 +127,32 @@ jobs:
       - name: Generate testing coverage report of project code as XML file
         run: coverage xml
 
+      - name: Upload testing coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: project_coverage_report
+          path: coverage.xml
+          if-no-files-found: error
+
+
+  codecov_finish:
+    needs: unit-test-codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download testing coverage report
+        uses: actions/download-artifact@v3
+        with:
+          name: project_coverage_report
+#          path: coverage.xml
+          path: ./
+
       # This usage be refer from https://about.codecov.io/blog/python-code-coverage-using-github-actions-and-codecov/
+      # Official document: https://github.com/marketplace/actions/codecov
+      # Issue: https://github.com/codecov/codecov-action/issues/598
       - name: Upload testing coverage of project code to Codecov
+        uses: codecov/codecov-action@v2
 #        run: |
 #           codecov -n 'pre-release codecov' -e OS,PYTHON -F unit-tests -F  integration-tests -t ${{ secrets.CODECOV_TOKEN }} -v
-        uses: codecov/codecov-action@v2
         with:
           version: "v0.1.15"
           name: pre-release codecov
@@ -142,3 +162,65 @@ jobs:
           env_vars: OS,PYTHON
           fail_ci_if_error: true   # optional (default = false)
           verbose: true    # optional (default = false)
+
+
+  codacy_finish:
+    needs: unit-test-codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download testing coverage report
+        uses: actions/download-artifact@v3
+        with:
+          name: project_coverage_report
+#          path: ./coverage.xml
+          path: ./
+
+      - name: Generate testing report for Codacy
+        run: mv ./coverage.xml ./cobertura.xml
+
+      - name: Upload testing report to Codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          # or
+          # api-token: ${{ secrets.CODACY_API_TOKEN }}
+          coverage-reports: cobertura.xml
+
+
+  pre-building_check:
+    needs: [codecov_finish, codacy_finish]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3.10 in Ubuntu OS
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install -U pip
+          pip3 install -U setuptools
+          pip3 install wheel
+          pip3 install requests
+          pip3 install bs4
+
+      - name: Install SmoothCrawler with by setup.py
+        run: |
+          python3 setup.py install --user || exit 1
+
+      - name: Show the Python package information
+        run: pip3 show smoothcrawler
+
+      - name: Test to run script with package 'smoothcrawler' in command lines
+        run: |
+          import smoothcrawler as mr
+          from smoothcrawler.crawler import SimpleCrawler
+          from smoothcrawler.components.data import BaseHTTPResponseParser, BaseDataHandler
+        shell: python
+
+      - name: Test to run script with package 'smoothcrawler' with Python file
+        run: python3 ./scripts/test_crawler.py

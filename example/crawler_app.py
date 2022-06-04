@@ -19,4 +19,7 @@ _example_crawler_impl.run_as_simple_crawler()
 # Target: API
 _stock_crawler_impl = StockCrawlerImpl()
 _stock_crawler_impl.run_as_simple_crawler()
+_stock_crawler_impl.run_as_async_simple_crawler()
+_stock_crawler_impl.run_as_executor_crawler()
+_stock_crawler_impl.run_as_pool_crawler()
 

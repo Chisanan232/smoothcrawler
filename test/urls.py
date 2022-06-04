@@ -1,6 +1,5 @@
 from smoothcrawler import URL
 from datetime import datetime, date, timedelta
-import pytest
 import re
 
 

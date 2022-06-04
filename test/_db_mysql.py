@@ -1,18 +1,17 @@
-from smoothcrawler.persistence.database import get_connection_pool, BaseCrawlerSingleConnection, BaseCrawlerConnectionPool, BaseCrawlerDatabaseOperator, BaseCrawlerDao
+from multirunnable.persistence.database.strategy import get_connection_pool, BaseSingleConnection, BaseConnectionPool
+from multirunnable.persistence.database.operator import DatabaseOperator
 
-from typing import Any, Tuple, cast, Union, Generic
+from typing import Any, Tuple, Union
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.pooling import MySQLConnectionPool, PooledMySQLConnection
 from mysql.connector.errors import PoolError
 from mysql.connector.cursor import MySQLCursor
 import mysql.connector
-import logging
 import time
-import os
 
 
 
-class MySQLSingleConnection(BaseCrawlerSingleConnection):
+class MySQLSingleConnection(BaseSingleConnection):
 
     def _connect_database(self, **kwargs) -> MySQLConnection:
         _connection = mysql.connector.connect(**kwargs)
@@ -33,7 +32,7 @@ class MySQLSingleConnection(BaseCrawlerSingleConnection):
 
 
 
-class MySQLDriverConnectionPool(BaseCrawlerConnectionPool):
+class MySQLDriverConnectionPool(BaseConnectionPool):
 
     def connect_database(self, **kwargs) -> MySQLConnectionPool:
         connection_pool = MySQLConnectionPool(**kwargs)
@@ -55,10 +54,6 @@ class MySQLDriverConnectionPool(BaseCrawlerConnectionPool):
                     raise ae
 
 
-    def _is_connected(self, conn: PooledMySQLConnection) -> bool:
-        return conn.is_connected()
-
-
     def _commit(self, conn: PooledMySQLConnection) -> None:
         conn.commit()
 
@@ -74,9 +69,9 @@ class MySQLDriverConnectionPool(BaseCrawlerConnectionPool):
 
 
 
-class MySQLOperator(BaseCrawlerDatabaseOperator):
+class MySQLOperator(DatabaseOperator):
 
-    def __init__(self, conn_strategy: Union[BaseCrawlerSingleConnection, BaseCrawlerConnectionPool], db_config={}):
+    def __init__(self, conn_strategy: Union[BaseSingleConnection, BaseConnectionPool], db_config={}):
         super().__init__(conn_strategy=conn_strategy, db_config=db_config)
 
 

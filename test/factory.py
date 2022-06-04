@@ -6,8 +6,8 @@ from ._components import (
     Urllib3HTTPRequest, AsyncHTTPRequest,
     Urllib3HTTPResponseParser, AsyncHTTPResponseParser,
     ExampleWebDataHandler, ExampleWebAsyncDataHandler,
-    DataFilePersistenceLayer,
-    DataDatabasePersistenceLayer)
+    DataFilePersistenceLayer
+)
 
 
 @pytest.fixture(scope="function")
@@ -27,12 +27,12 @@ class TestCrawlerFactory:
 
         try:
             crawler_factory.http_factory = _http_req
-        except Exception as e:
-            assert False, f"It should set the factory via property finely."
+        except Exception:
+            assert False, "It should set the factory via property finely."
         else:
-            assert True, f"It works."
+            assert True, "It works."
 
-            assert crawler_factory.http_factory == _http_req, f"Property value should be equal to the instance."
+            assert crawler_factory.http_factory == _http_req, "Property value should be equal to the instance."
 
 
     def test_parser_factory(self, crawler_factory: CrawlerFactory):
@@ -40,12 +40,12 @@ class TestCrawlerFactory:
 
         try:
             crawler_factory.parser_factory = _response_parser
-        except Exception as e:
-            assert False, f"It should set the factory via property finely."
+        except Exception:
+            assert False, "It should set the factory via property finely."
         else:
-            assert True, f"It works."
+            assert True, "It works."
 
-            assert crawler_factory.parser_factory == _response_parser, f"Property value should be equal to the instance."
+            assert crawler_factory.parser_factory == _response_parser, "Property value should be equal to the instance."
 
 
     def test_data_handling_factory(self, crawler_factory: CrawlerFactory):
@@ -53,12 +53,12 @@ class TestCrawlerFactory:
 
         try:
             crawler_factory.data_handling_factory = _data_handler
-        except Exception as e:
-            assert False, f"It should set the factory via property finely."
+        except Exception:
+            assert False, "It should set the factory via property finely."
         else:
-            assert True, f"It works."
+            assert True, "It works."
 
-            assert crawler_factory.data_handling_factory == _data_handler, f"Property value should be equal to the instance."
+            assert crawler_factory.data_handling_factory == _data_handler, "Property value should be equal to the instance."
 
 
     def test_persistence_factory(self, crawler_factory: CrawlerFactory):
@@ -66,12 +66,12 @@ class TestCrawlerFactory:
 
         try:
             crawler_factory.persistence_factory = _persistence_handler
-        except Exception as e:
-            assert False, f"It should set the factory via property finely."
+        except Exception:
+            assert False, "It should set the factory via property finely."
         else:
-            assert True, f"It works."
+            assert True, "It works."
 
-            assert crawler_factory.persistence_factory == _persistence_handler, f"Property value should be equal to the instance."
+            assert crawler_factory.persistence_factory == _persistence_handler, "Property value should be equal to the instance."
 
 
 class TestAsyncCrawlerFactory:
@@ -81,12 +81,12 @@ class TestAsyncCrawlerFactory:
 
         try:
             async_crawler_factory.http_factory = _http_req
-        except Exception as e:
-            assert False, f"It should set the factory via property finely."
+        except Exception:
+            assert False, "It should set the factory via property finely."
         else:
-            assert True, f"It works."
+            assert True, "It works."
 
-            assert async_crawler_factory.http_factory == _http_req, f"Property value should be equal to the instance."
+            assert async_crawler_factory.http_factory == _http_req, "Property value should be equal to the instance."
 
 
     def test_parser_factory(self, async_crawler_factory: CrawlerFactory):
@@ -94,12 +94,12 @@ class TestAsyncCrawlerFactory:
 
         try:
             async_crawler_factory.parser_factory = _response_parser
-        except Exception as e:
-            assert False, f"It should set the factory via property finely."
+        except Exception:
+            assert False, "It should set the factory via property finely."
         else:
-            assert True, f"It works."
+            assert True, "It works."
 
-            assert async_crawler_factory.parser_factory == _response_parser, f"Property value should be equal to the instance."
+            assert async_crawler_factory.parser_factory == _response_parser, "Property value should be equal to the instance."
 
 
     def test_data_handling_factory(self, async_crawler_factory: CrawlerFactory):
@@ -107,12 +107,12 @@ class TestAsyncCrawlerFactory:
 
         try:
             async_crawler_factory.data_handling_factory = _data_handler
-        except Exception as e:
-            assert False, f"It should set the factory via property finely."
+        except Exception:
+            assert False, "It should set the factory via property finely."
         else:
-            assert True, f"It works."
+            assert True, "It works."
 
-            assert async_crawler_factory.data_handling_factory == _data_handler, f"Property value should be equal to the instance."
+            assert async_crawler_factory.data_handling_factory == _data_handler, "Property value should be equal to the instance."
 
 
     def test_persistence_factory(self, async_crawler_factory: CrawlerFactory):
@@ -120,10 +120,10 @@ class TestAsyncCrawlerFactory:
 
         try:
             async_crawler_factory.persistence_factory = _persistence_handler
-        except Exception as e:
-            assert False, f"It should set the factory via property finely."
+        except Exception:
+            assert False, "It should set the factory via property finely."
         else:
-            assert True, f"It works."
+            assert True, "It works."
 
-            assert async_crawler_factory.persistence_factory == _persistence_handler, f"Property value should be equal to the instance."
+            assert async_crawler_factory.persistence_factory == _persistence_handler, "Property value should be equal to the instance."
 
