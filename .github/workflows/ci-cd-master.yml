@@ -205,6 +205,8 @@ jobs:
           pip3 install -U pip
           pip3 install -U setuptools
           pip3 install wheel
+          pip3 install requests
+          pip3 install bs4
 
       - name: Install MultiRunnable with by setup.py
         run: |
