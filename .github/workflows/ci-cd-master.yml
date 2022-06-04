@@ -58,11 +58,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-#      - name: Install dependencies by cloning from GitHub MultiRunnable
+#      - name: Install dependencies by cloning from GitHub SmoothCrawler
 #        run: |
-#          git clone https://github.com/Chisanan232/multirunnable.git -b master ./multirunnable
-#          sudo python ./multirunnable/setup.py install
-#          pip install -r ./multirunnable/dev-requirements.txt
+#          git clone https://github.com/Chisanan232/smoothcrawler.git -b master ./smoothcrawler
+#          sudo python ./smoothcrawler/setup.py install
+#          pip install -r ./smoothcrawler/dev-requirements.txt
 
       - name: Install Python dependencies
         run: |
@@ -156,7 +156,7 @@ jobs:
         with:
           version: "v0.1.15"
           name: pre-release codecov
-          token: ${{ secrets.CODECOV_TOKEN }}   # The token of project MultiRunnable in codecov
+          token: ${{ secrets.CODECOV_TOKEN }}   # The token of project SmoothCrawler in codecov
           flags: unit-tests, integration-tests    # optional
           files: coverage.xml
           env_vars: OS,PYTHON
@@ -208,21 +208,21 @@ jobs:
           pip3 install requests
           pip3 install bs4
 
-      - name: Install MultiRunnable with by setup.py
+      - name: Install SmoothCrawler with by setup.py
         run: |
           python3 setup.py install --user || exit 1
 
       - name: Show the Python package information
         run: pip3 show smoothcrawler
 
-      - name: Test to run script with package 'multirunnable' in command lines
+      - name: Test to run script with package 'smoothcrawler' in command lines
         run: |
           import smoothcrawler as mr
           from smoothcrawler.crawler import SimpleCrawler
           from smoothcrawler.components.data import BaseHTTPResponseParser, BaseDataHandler
         shell: python
 
-      - name: Test to run script with package 'multirunnable' with Python file
+      - name: Test to run script with package 'smoothcrawler' with Python file
         run: python3 ./scripts/test_crawler.py
 
 
@@ -287,4 +287,4 @@ jobs:
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-#          TWINE_REPOSITORY: multirunnable
+#          TWINE_REPOSITORY: smoothcrawler
