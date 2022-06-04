@@ -218,7 +218,7 @@ jobs:
           import smoothcrawler as mr
           from smoothcrawler.crawler import SimpleCrawler
           from smoothcrawler.components.data import BaseHTTPResponseParser, BaseDataHandler
-        shell: python3
+        shell: python
 
       - name: Test to run script with package 'multirunnable' with Python file
         run: python3 ./scripts/test_crawler.py
