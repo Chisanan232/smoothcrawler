@@ -225,10 +225,10 @@ class TestHTTPResponseParser(BaseHTTPResponseParserTestSpec):
         parser = _Not200HTTPResponseParser()
         parsed_result = parser.parse_content(response=response)
         assert Handled_HTTP_200_Response_Flag is False, \
-            f"It should not run the method 'handle_http_200_response' because status_code always return 300 in class '_Not200HTTPResponseParser'."
+            "It should not run the method 'handle_http_200_response' because status_code always return 300 in class '_Not200HTTPResponseParser'."
         assert Handled_HTTP_Not_200_Response_Flag is True, \
-            f"It should run the method 'handle_http_not_200_response' because status_code always return 300 in class '_Not200HTTPResponseParser'."
-        assert parsed_result == "Invalid Website", f"It should return the value 'Invalid Website'."
+            "It should run the method 'handle_http_not_200_response' because status_code always return 300 in class '_Not200HTTPResponseParser'."
+        assert parsed_result == "Invalid Website", "It should return the value 'Invalid Website'."
 
 
 def _run_async_func(_callable):
@@ -300,10 +300,10 @@ class TestAsyncHTTPResponseParser(BaseHTTPResponseParserTestSpec):
             parser = _Not200AsyncHTTPResponseParser()
             parsed_result = await parser.parse_content(response=response)
             assert Handled_HTTP_200_Response_Flag is False, \
-                f"It should not run the method 'handle_http_200_response' because status_code always return 300 in class '_Not200HTTPResponseParser'."
+                "It should not run the method 'handle_http_200_response' because status_code always return 300 in class '_Not200HTTPResponseParser'."
             assert Handled_HTTP_Not_200_Response_Flag is True, \
-                f"It should run the method 'handle_http_not_200_response' because status_code always return 300 in class '_Not200HTTPResponseParser'."
-            assert parsed_result == "Invalid Website", f"It should return the value 'Invalid Website'."
+                "It should run the method 'handle_http_not_200_response' because status_code always return 300 in class '_Not200HTTPResponseParser'."
+            assert parsed_result == "Invalid Website", "It should return the value 'Invalid Website'."
 
         _run_async_func(_process)
 
@@ -319,7 +319,7 @@ class TestDataHandler(BaseDataHandleTestSpec):
         data_handler = _MyExampleDataHandler()
         parsed_result = parser.parse_content(response=response)
         handled_data = data_handler.process(result=parsed_result)
-        assert handled_data == f"Because I got {parsed_result}, I like to move it, move it.", f"The handled data format should conform to the implementation of data processing in class '_MyExampleDataHandler'."
+        assert handled_data == f"Because I got {parsed_result}, I like to move it, move it.", "The handled data format should conform to the implementation of data processing in class '_MyExampleDataHandler'."
 
 
 
@@ -334,7 +334,7 @@ class TestAsyncDataHandler(BaseDataHandleTestSpec):
             data_handler = _MyExampleAsyncDataHandler()
             parsed_result = await parser.parse_content(response=response)
             handled_data = await data_handler.process(result=parsed_result)
-            assert handled_data == f"Because I got {parsed_result}, I like to move it, move it.", f"The handled data format should conform to the implementation of data processing in class '_MyExampleDataHandler'."
+            assert handled_data == f"Because I got {parsed_result}, I like to move it, move it.", "The handled data format should conform to the implementation of data processing in class '_MyExampleDataHandler'."
 
         _run_async_func(_process)
 

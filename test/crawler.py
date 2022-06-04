@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar, Generic
+from typing import TypeVar
 import pytest
 
 from smoothcrawler.crawler import (
@@ -8,17 +8,15 @@ from smoothcrawler.crawler import (
     AsyncSimpleCrawler,
     ExecutorCrawler,
     PoolCrawler,
-    RunAsParallel, RunAsConcurrent, RunAsCoroutine)
+    RunAsConcurrent, RunAsCoroutine)
 from smoothcrawler.urls import URL
 from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 
 from ._components import (
-    # MyRetry,
     Urllib3HTTPRequest, RequestsHTTPRequest, AsyncHTTPRequest,
     Urllib3HTTPResponseParser, RequestsHTTPResponseParser, AsyncHTTPResponseParser,
-    ExampleWebDataHandler, ExampleWebAsyncDataHandler,
-    DataFilePersistenceLayer,
-    DataDatabasePersistenceLayer)
+    ExampleWebDataHandler, ExampleWebAsyncDataHandler
+)
 
 
 T = TypeVar("T")
@@ -89,6 +87,36 @@ class TestSimpleCrawler(BaseCrawlerTestSpec):
 
 
 
+class TestSimpleCrawlerByRegister(BaseCrawlerTestSpec):
+
+    @pytest.fixture
+    def crawler(self) -> BaseCrawler:
+        _sc = SimpleCrawler()
+        _sc.register_factory(
+            http_req_sender=Urllib3HTTPRequest(),
+            http_resp_parser=Urllib3HTTPResponseParser(),
+            data_process=ExampleWebDataHandler()
+        )
+        return _sc
+
+
+    def test_run_with_one_url(self, crawler: SimpleCrawler):
+        result = crawler.run("GET", Test_Example_URL)
+        assert result is not None, f"It should get some data finally."
+
+
+    def test_run_with_multiple_urls(self, crawler: SimpleCrawler, urls: list):
+        result = crawler.run("GET", urls)
+        assert result is not None, f"It should get some data finally."
+
+
+    @pytest.mark.skip(reason="[TestSimpleCrawler.run_and_save] doesn't implement testing code.")
+    def test_run_and_save(self, crawler: SimpleCrawler):
+        result = crawler.run("GET", Test_Example_URL)
+        assert result is not None, f"It should get some data finally."
+
+
+
 class TestAsyncSimpleCrawler(BaseCrawlerTestSpec):
 
     @pytest.fixture
@@ -99,6 +127,36 @@ class TestAsyncSimpleCrawler(BaseCrawlerTestSpec):
         _acf.data_handling_factory = ExampleWebAsyncDataHandler()
 
         _sc = AsyncSimpleCrawler(factory=_acf, executors=3)
+        return _sc
+
+
+    def test_run_with_urls_list(self, crawler: AsyncSimpleCrawler, urls: list):
+        result = crawler.run("GET", urls)
+        assert result is not None, f"It should get some data finally."
+
+
+    def test_run_with_urls_list_less_than_executors(self, crawler: AsyncSimpleCrawler, less_urls: list):
+        result = crawler.run("GET", less_urls)
+        assert result is not None, f"It should get some data finally."
+
+
+    @pytest.mark.skip(reason="[TestAsyncSimpleCrawler.process_with_queue] doesn't implement testing code.")
+    def test_run_with_urls_queue(self, crawler: AsyncSimpleCrawler, urls: list):
+        result = crawler.run("GET", urls)
+        assert result is not None, f"It should get some data finally."
+
+
+
+class TestAsyncSimpleCrawlerByRegister(BaseCrawlerTestSpec):
+
+    @pytest.fixture
+    def crawler(self) -> BaseCrawler:
+        _sc = AsyncSimpleCrawler(executors=3)
+        _sc.register_factory(
+            http_req_sender=AsyncHTTPRequest(),
+            http_resp_parser=AsyncHTTPResponseParser(),
+            data_process=ExampleWebAsyncDataHandler()
+        )
         return _sc
 
 

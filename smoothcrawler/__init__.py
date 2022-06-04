@@ -1,4 +1,5 @@
-from smoothcrawler.urls import URL
-from smoothcrawler.components.httpio import HTTP, AsyncHTTP
-from smoothcrawler.components.data import BaseHTTPResponseParser, BaseDataHandler
-from smoothcrawler.crawler import SimpleCrawler, ExecutorCrawler, AsyncSimpleCrawler, PoolCrawler
+from .__pkg_info__ import __version__
+from .urls import URL
+from .components.httpio import HTTP, AsyncHTTP
+from .components.data import BaseHTTPResponseParser, BaseDataHandler
+from .crawler import SimpleCrawler, ExecutorCrawler, AsyncSimpleCrawler, PoolCrawler

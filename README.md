@@ -1,10 +1,11 @@
 # SmoothCrawler
 
 [![Supported Versions](https://img.shields.io/pypi/pyversions/smoothcrawler.svg?logo=python&logoColor=FBE072)](https://pypi.org/project/smoothcrawler)
-[![Release](https://img.shields.io/github/release/Chisanan232/SmoothCrawler.svg?label=Release&sort=semver)](https://github.com/Chisanan232/SmoothCrawler/releases)
-[![PyPI version](https://badge.fury.io/py/SmoothCrawler.svg)](https://badge.fury.io/py/SmoothCrawler)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Release](https://img.shields.io/github/release/Chisanan232/SmoothCrawler.svg?label=Release&logo=github)](https://github.com/Chisanan232/SmoothCrawler/releases)
+[![PyPI version](https://badge.fury.io/py/SmoothCrawler.svg?logo=pypi)](https://badge.fury.io/py/SmoothCrawler)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?logo=apache)](https://opensource.org/licenses/Apache-2.0)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/cf25e1acc34a4c44b6b1ac7084cfe7c5)](https://www.codacy.com/gh/Chisanan232/smoothcrawler/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Chisanan232/smoothcrawler&amp;utm_campaign=Badge_Grade)
+[![Documentation Status](https://readthedocs.org/projects/smoothcrawler/badge/?version=latest)](https://smoothcrawler.readthedocs.io/en/latest/?badge=latest)
 
 | OS | Building Status | Coverage Status |
 |------------|------------|--------|
@@ -15,31 +16,38 @@
 
 [comment]: <> (| Linux |[![CircleCI]&#40;https://circleci.com/gh/Chisanan232/smoothcrawler.svg?style=shield&#41;]&#40;https://app.circleci.com/pipelines/github/Chisanan232/smoothcrawler&#41;|[![codecov]&#40;https://codecov.io/gh/Chisanan232/smoothcrawler/branch/master/graph/badge.svg?token=BTYTU20FBT&#41;]&#40;https://codecov.io/gh/Chisanan232/smoothcrawler&#41;|)
 
-A Python package for building crawler humanly as different roles.
+*SmoothCrawler* is a Python framework for being faster and easier to build crawler (or be called web spider).
+The core concept of its implementation is SoC (Separation of Concerns). It could build crawler humanly as different 
+roles which be combined with different components.
 
-[Overview](#overview) | [Quickly Start](#quickly-start) | [Code Example](https://github.com/Chisanan232/smoothcrawler/tree/master/example)
+[Overview](#overview) | [Quickly Demo](#quickly-demo) | [Documentation](#documentation)  | [Code Example](https://github.com/Chisanan232/smoothcrawler/tree/master/example)
 <hr>
 
 
 ## Overview
 
-Implementing web crawler in Python is very easy and simple. It already has many frameworks or libraries to do it.
-However, they focus on one point. It means that they all have their own responsibility to face different things.
-For HTTP, you must think about *urllib3* or *requests*; For parsing HTTP response, *Beautiful Soup*. A framework to do it, *scrapy* or *selenium*.
+Implementing a web crawler in Python is very easy and simple. It already has many frameworks or libraries to do it.
+However, they focus on one point. It means that they all have their own responsibility to face different things:
+
+* For HTTP, you must think about *urllib3* or *requests*.
+* For parsing HTTP response, *BeautifulSoup* (*bs4*).
+* A framework to do it, *scrapy* or *selenium*.
+
 How about a library to build a **crawler system**?
 
 Every crawler should do mostly same things and procedures:
 
-    send HTTP request -> get HTTP response and parse it -> handle data if it's necessary -> persistence process
+![image](https://github.com/Chisanan232/smoothcrawler/tree/master/docs/source/images/Work_Process(Briefly).drawio.png)
 
-In general, a crawler code usually be used 1 or 2 times. It even could implement and run the code via writing script. 
-That's the reason why it doesn't need to develop a **program** for crawler, much less maintain the crawler program (for example, web element locations will be your nightmare) or change requirement.
+In generally, a crawler code usually be unstable and even be difficult (e.g. parsing a complex HTML elements content). 
+So it's keeping facing many challenges when you're developing web spider, much less maintain the crawler program (for 
+example, web element locations changing will be your nightmare) or change requirement.
 
 _smoothcrawler_ like LEGO blocks, it classifies crawling to be some components. Every component has its own responsibility to do something. 
 Components could reuse others if it needs. One component focus one thing. Finally, the components combines to form a crawler.
 
 
-## Quickly Start
+## Quickly Demo
 
 Install _smoothcrawler_ via **pip**:
 
@@ -49,40 +57,40 @@ Let's write a simple crawler to crawl data.
 
 * Component 1: Send HTTP requests
 
-Implement with Python package _urllib3_. Of course, it could implement by _requests_, too.
+Implement with Python package _requests_. Of course, it could implement by _urllib3_, too.
 
 ```python
 from smoothcrawler.components.httpio import HTTP
-import urllib3
+import requests
 
 class FooHTTPRequest(HTTP):
 
     __Http_Response = None
 
     def get(self, url: str, *args, **kwargs):
-        _http = urllib3.PoolManager()
-        self.__Http_Response = _http.request("GET", url)
-        return self.__Http_Response
+            self.__Http_Response = requests.get(url)
+            return self.__Http_Response
 ```
 
 * Component 2: Get and parse HTTP response
 
-Get the HTTP response object and get the content data from it. It only decodes the data because the data is so clean of the API.
+Get the HTTP response object and parse the content data from it.
 
 ```python
 from smoothcrawler.components.data import BaseHTTPResponseParser
-from typing import Any
-import urllib3
+from bs4 import BeautifulSoup
+import requests
+
 
 class FooHTTPResponseParser(BaseHTTPResponseParser):
 
-    def get_status_code(self, response: urllib3.response.HTTPResponse) -> int:
+    def get_status_code(self, response: requests.Response) -> int:
         return response.status
 
-
-    def handling_200_response(self, response: urllib3.response.HTTPResponse) -> Any:
-        _data = response.data.decode('utf-8')
-        return _data
+    def handling_200_response(self, response: requests.Response) -> str:
+        _bs = BeautifulSoup(response.text, "html.parser")
+        _example_web_title = _bs.find_all("h1")
+        return _example_web_title[0].text
 ```
 
 * Component 3: Handle data processing
@@ -91,54 +99,21 @@ Demonstrate it could do some data processing here.
 
 ```python
 from smoothcrawler.components.data import BaseDataHandler
-import json
 
 class FooDataHandler(BaseDataHandler):
 
     def process(self, result):
-        _result_json = json.loads(result)
-        _result_data = _result_json["data"]
-
-        _final_data = []
-        _data_row = []
-
-        for _d in _result_data:
-            # # stock_date
-            _data_row.append(_d[0].replace("/", "-"))
-            # # trade_volume
-            _data_row.append(int(_d[1].replace(",", "")))
-            # # turnover_price
-            _data_row.append(int(_d[2].replace(",", "")))
-            # # opening_price
-            _data_row.append(float(_d[3]))
-            # # highest_price
-            _data_row.append(float(_d[4]))
-            # # lowest_price
-            _data_row.append(float(_d[5]))
-            # # closing_price
-            _data_row.append(float(_d[6]))
-            # # gross_spread
-            _data_row.append(str(_d[7]))
-            # # turnover_volume
-            _data_row.append(int(_d[8].replace(",", "")))
-
-            _final_data.append(_data_row.copy())
-            _data_row[:] = []
-
-        return _final_data
+        return "This is the example.com website header text: " + result
 ```
 
 * Product: Components combine to form a  crawler
 
 It has 3 components now: HTTP sender, HTTP response parser and data processing handler.
-They could combine to form a crawler and crawl data from target URL(s) via crawler role 'SimpleCrawler'.
+They could combine to form a crawler and crawl data from target URL(s) via crawler role _SimpleCrawler_.
 
 ```python
 from smoothcrawler.crawler import SimpleCrawler
 from smoothcrawler.factory import CrawlerFactory
-
-# Taiwan stock data
-Test_URL_TW_Stock = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210801&stockNo=2330"
 
 _cf = CrawlerFactory()
 _cf.http_factory = FooHTTPRequest()
@@ -147,7 +122,62 @@ _cf.data_handling_factory = FooDataHandler()
 
 # Crawler Role: Simple Crawler
 sc = SimpleCrawler(factory=_cf)
-data = sc.run("GET", Test_URL_TW_Stock)
-print(f"data: {data}")
+data = sc.run("GET", "http://www.example.com")
+print(data)
+# This is the example.com website header text: Example Domain
 ```
 
+* Be more easier implementation in one object.
+
+You may think: come on, I just want to get a simple data easily, so I don't want to 
+divergent simple implementations to many different objects. It's not clear and graceful.
+
+Don't worry, it also could implement that in one object which extends _SimpleCrawler_ like following:
+
+```python
+from smoothcrawler.crawler import SimpleCrawler
+from bs4 import BeautifulSoup
+import requests
+
+class ExampleEasyCrawler(SimpleCrawler):
+
+   def send_http_request(self, method: str, url: str, retry: int = 1, *args, **kwargs) -> requests.Response:
+       _response = requests.get(url)
+       return _response
+
+
+   def parse_http_response(self, response: requests.Response) -> str:
+       _bs = BeautifulSoup(response.text, "html.parser")
+       _example_web_title = _bs.find_all("h1")
+       return _example_web_title[0].text
+
+
+   def data_process(self, parsed_response: str) -> str:
+       return "This is the example.com website header text: " + parsed_response
+```
+
+Finally, you could instantiate and use it directly:
+
+```python
+_example_easy_crawler = ExampleEasyCrawler()    # Instantiate your own crawler object
+_example_result = _example_easy_crawler.run("get", "http://www.example.com")    # Run the web spider task with function *run* and get the result
+print(_example_result)
+# This is the example.com website header text: Example Domain
+```
+
+How the usage easy and code clear is!
+
+
+## Documentation
+
+The [documentation](https://smoothcrawler.readthedocs.io) contains more details, and examples.
+
+* [Quickly Start](https://smoothcrawler.readthedocs.io/en/latest/quickly_start.html) to develop web spider with *SmoothCrawler*
+
+
+## Download 
+
+*SmoothCrawler* still a young open source which keep growing. Here's its download state: 
+
+[![Downloads](https://pepy.tech/badge/smoothcrawler)](https://pepy.tech/project/smoothcrawler)
+[![Downloads](https://pepy.tech/badge/smoothcrawler/month)](https://pepy.tech/project/smoothcrawler)

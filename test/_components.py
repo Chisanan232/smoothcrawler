@@ -1,7 +1,7 @@
-from smoothcrawler.components.data import BaseHTTPResponseParser, BaseDataHandler, BaseAsyncHTTPResponseParser, BaseAsyncDataHandler
+from smoothcrawler.components.persistence import PersistenceFacade
 from smoothcrawler.components.httpio import HTTP, AsyncHTTP
-from smoothcrawler.persistence import PersistenceFacade
-from smoothcrawler.persistence.file import SavingStrategy
+from smoothcrawler.components.data import BaseHTTPResponseParser, BaseDataHandler, BaseAsyncHTTPResponseParser, BaseAsyncDataHandler
+from multirunnable.persistence.file import SavingStrategy
 from typing import Any
 from bs4 import BeautifulSoup
 import requests
@@ -9,16 +9,6 @@ import urllib3
 import aiohttp
 
 from ._persistence_layer import StockDao, StockFao
-
-
-_database_config = {
-    "host": "127.0.0.1",
-    # "host": "172.17.0.6",
-    "port": "3306",
-    "user": "root",
-    "password": "password",
-    "database": "tw_stock"
-}
 
 
 
@@ -124,7 +114,7 @@ class DataFilePersistenceLayer(PersistenceFacade):
 class DataDatabasePersistenceLayer(PersistenceFacade):
 
     def save(self, data, *args, **kwargs):
-        _stock_dao = StockDao(**_database_config)
+        _stock_dao = StockDao()
         _stock_dao.create_stock_data_table(stock_symbol="2330")
         _data_rows = [tuple(d) for d in data]
         _stock_dao.batch_insert(stock_symbol="2330", data=_data_rows)

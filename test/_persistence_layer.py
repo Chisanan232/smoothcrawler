@@ -59,19 +59,20 @@ Note:
 
 """
 
-from smoothcrawler.persistence.database import BaseCrawlerDao
-from smoothcrawler.persistence.file import BaseCrawlerFao, SavingStrategy, SavingMediator
+from multirunnable.persistence.database.layer import BaseDao
+from multirunnable.persistence.file.mediator import SavingMediator
+from multirunnable.persistence.file.layer import BaseFao, SavingStrategy
 
 from ._db_mysql import MySQLSingleConnection, MySQLDriverConnectionPool, MySQLOperator
 
-from mysql.connector import MySQLConnection, errorcode
-from mysql.connector.errors import DatabaseError, PoolError
+from mysql.connector.errors import DatabaseError
+from mysql.connector import errorcode
 from typing import List, Tuple, Dict, Union
 import re
 
 
 
-class StockDao(BaseCrawlerDao):
+class StockDao(BaseDao):
 
     __Stock_Table_Name: str = "stock_data_"
     __Database_Config: Dict[str, str] = {}
@@ -111,7 +112,7 @@ class StockDao(BaseCrawlerDao):
 
     def get_tables(self, database: str) -> List[str]:
         # super(MySQLDB, self).checker(session=self.__session)
-        sql = f"SELECT table_name FROM information_schema.tables " \
+        sql = "SELECT table_name FROM information_schema.tables " \
               f"WHERE table_schema = '{database}';"
 
         self.execute(sql)
@@ -170,11 +171,10 @@ class StockDao(BaseCrawlerDao):
         else:
             data = ",".join(data)
 
-        sql = f"" \
-              f"INSERT INTO tw_stock.stock_data_{stock_symbol} (" \
-              f"stock_date, trade_volume, turnover_price, opening_price, " \
-              f"highest_price, lowest_price, closing_price, gross_spread, turnover_volume" \
-              f") " \
+        sql = f"INSERT INTO tw_stock.stock_data_{stock_symbol} (" \
+              "stock_date, trade_volume, turnover_price, opening_price, " \
+              "highest_price, lowest_price, closing_price, gross_spread, turnover_volume" \
+              ") " \
               f"VALUES ({data})"
 
         self.execute(sql)
@@ -182,16 +182,15 @@ class StockDao(BaseCrawlerDao):
 
 
     def batch_insert(self, stock_symbol: str, data: Tuple[tuple]) -> None:
-        sql = f"" \
-              f"INSERT INTO tw_stock.stock_data_{stock_symbol} (stock_date, trade_volume, turnover_price, opening_price, highest_price, lowest_price, closing_price, gross_spread, turnover_volume) " \
-              f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        sql = f"INSERT INTO tw_stock.stock_data_{stock_symbol} (stock_date, trade_volume, turnover_price, opening_price, highest_price, lowest_price, closing_price, gross_spread, turnover_volume) " \
+              "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
         self.execute_many(sql, data)
         self.database_opts.commit()
 
 
 
-class StockFao(BaseCrawlerFao):
+class StockFao(BaseFao):
 
     def __init__(self, strategy: SavingStrategy, **kwargs):
         super().__init__(strategy=strategy, **kwargs)

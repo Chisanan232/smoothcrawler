@@ -58,26 +58,25 @@ Note:
     ALTER TABLE type modify type_name varchar(50) CHARACTER SET utf8;
 
 """
+from multirunnable.persistence.database.strategy import BaseDatabaseConnection
+from multirunnable.persistence.database.layer import BaseDao
+from multirunnable.persistence.file.layer import BaseFao
 
-from smoothcrawler.persistence.database import BaseCrawlerDao
-from smoothcrawler.persistence.file import BaseCrawlerFao, SavingStrategy, SavingMediator
+from .mysql_impl import MySQLSingleConnection, MySQLDriverConnectionPool, MySQLOperator
 
-from mysql_impl import MySQLSingleConnection, MySQLDriverConnectionPool, MySQLOperator
-
-from mysql.connector import MySQLConnection, errorcode
-from mysql.connector.errors import DatabaseError, PoolError
+from mysql.connector import errorcode
+from mysql.connector.errors import DatabaseError
 from typing import List, Tuple, Dict, Union
-import re
 
 
 
-class StockDao(BaseCrawlerDao):
+class StockDao(BaseDao):
 
     __Stock_Table_Name: str = "stock_data_"
     __Database_Config: Dict[str, str] = {}
 
-    def __init__(self, use_pool: bool = False, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, db_driver: str = None, use_pool: bool = False, **kwargs):
+        self._db_driver = db_driver
         self._use_pool = use_pool
         # self.__database_connection = None
         self.__database_opt = None
@@ -92,9 +91,22 @@ class StockDao(BaseCrawlerDao):
             "database": "tw_stock"
         }
 
+        super().__init__()
 
-    @property
-    def database_opt(self) -> MySQLOperator:
+
+    def _instantiate_strategy(self) -> BaseDatabaseConnection:
+        if self._db_driver == "mysql":
+            # from db_mysql import MySQLSingleConnection, MySQLDriverConnectionPool, MySQLOperator
+            if self._use_pool is True:
+                db_conn_strategy = MySQLDriverConnectionPool(**self._database_config)
+            else:
+                db_conn_strategy = MySQLSingleConnection(**self._database_config)
+            return db_conn_strategy
+        else:
+            raise ValueError
+
+
+    def _instantiate_database_opts(self, strategy: BaseDatabaseConnection) -> MySQLOperator:
         if self.__database_opt is None:
             if self._use_pool is True:
                 __database_connection = MySQLDriverConnectionPool(**self._database_config)
@@ -115,7 +127,7 @@ class StockDao(BaseCrawlerDao):
               f"WHERE table_schema = '{database}';"
 
         self.execute(sql)
-        tables = list(self.database_opt.fetch_all())
+        tables = list(self.fetch_all())
         return [t[0] for t in tables]
 
 
@@ -135,7 +147,7 @@ class StockDao(BaseCrawlerDao):
 
         try:
             self.execute(sql)
-            self.database_opt._connection.commit()
+            self.commit()
         except DatabaseError as e:
             if e.errno == errorcode.ER_TABLE_EXISTS_ERROR:
                 return True
@@ -187,7 +199,7 @@ class StockDao(BaseCrawlerDao):
         sql = f"INSERT INTO {table} ({columns}) VALUES ({data})"
 
         self.execute(sql)
-        self.database_opt._connection.commit()
+        self.commit()
 
 
     def batch_insert(self, table: str, columns: List[str], data: List[tuple]) -> None:
@@ -199,26 +211,11 @@ class StockDao(BaseCrawlerDao):
 
         sql = f"INSERT INTO {table} ({sql_columns}) VALUES ({sql_data_values})"
 
-        self.database_opt.execute_many(sql, data)
-        self.database_opt._connection.commit()
+        self.execute_many(sql, data)
+        self.commit()
 
 
 
-class StockFao(BaseCrawlerFao):
-
-    def __init__(self, strategy: SavingStrategy, **kwargs):
-        super().__init__(strategy=strategy, **kwargs)
-        self.__mediator = SavingMediator()
-        self.__strategy = strategy
-
-
-    def save(self, formatter: str, file: str, mode: str, data):
-        if re.search(r"csv", formatter, re.IGNORECASE) is not None:
-            self.save_as_csv(file=file, mode=mode, data=data)
-        elif re.search(r"xlsx", formatter, re.IGNORECASE) or re.search(r"excel", formatter, re.IGNORECASE):
-            self.save_as_excel(file=file, mode=mode, data=data)
-        elif re.search(r"json", formatter, re.IGNORECASE):
-            self.save_as_json(file=file, mode=mode, data=data)
-        else:
-            raise ValueError(f"It doesn't support the file format '{formatter}'.")
+class StockFao(BaseFao):
+    pass
 
