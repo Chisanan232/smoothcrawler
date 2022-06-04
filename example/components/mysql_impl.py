@@ -1,5 +1,5 @@
 from multirunnable.persistence.database.strategy import get_connection_pool, BaseSingleConnection, BaseConnectionPool
-from multirunnable.persistence.database.operator import BaseDatabaseOperator
+from multirunnable.persistence.database.operator import DatabaseOperator
 
 from typing import Any, Tuple, Union
 from mysql.connector.connection import MySQLConnection
@@ -68,7 +68,7 @@ class MySQLDriverConnectionPool(BaseConnectionPool):
 
 
 
-class MySQLOperator(BaseDatabaseOperator):
+class MySQLOperator(DatabaseOperator):
 
     def __init__(self, conn_strategy: Union[BaseSingleConnection, BaseConnectionPool], db_config={}):
         super(MySQLOperator, self).__init__(conn_strategy=conn_strategy, db_config=db_config)
