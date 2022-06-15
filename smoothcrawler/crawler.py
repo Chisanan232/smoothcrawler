@@ -58,7 +58,8 @@ class BaseCrawler(metaclass=ABCMeta):
                          http_req_sender: _BaseHttpIo = None,
                          http_resp_parser: _BaseHTTPResponseParser = None,
                          data_process: Union[_BaseDataHandler, _BaseAsyncDataHandler] = None,
-                         persistence: _PersistenceFacade = None) -> None:
+                         persistence: _PersistenceFacade = None,
+                         **kwargs) -> None:
         """
         Register SmoothCrawler's component(s) to CrawlerFactory instance.
 
