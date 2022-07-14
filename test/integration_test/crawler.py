@@ -12,7 +12,7 @@ from smoothcrawler.crawler import (
 from smoothcrawler.urls import URL
 from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 
-from ._components import (
+from .._components import (
     Urllib3HTTPRequest, RequestsHTTPRequest, AsyncHTTPRequest,
     Urllib3HTTPResponseParser, RequestsHTTPResponseParser, AsyncHTTPResponseParser,
     ExampleWebDataHandler, ExampleWebAsyncDataHandler

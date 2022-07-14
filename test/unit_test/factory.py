@@ -2,7 +2,7 @@ import pytest
 
 from smoothcrawler.factory import CrawlerFactory, AsyncCrawlerFactory
 
-from ._components import (
+from .._components import (
     Urllib3HTTPRequest, AsyncHTTPRequest,
     Urllib3HTTPResponseParser, AsyncHTTPResponseParser,
     ExampleWebDataHandler, ExampleWebAsyncDataHandler,
