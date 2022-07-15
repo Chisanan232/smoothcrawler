@@ -1,0 +1,20 @@
+###### SmoothCrawler-AppIntegration Development (or Testing) Dependencies Requirements ######
+## For running pytest ##
+pytest >= 7.0.0
+pytest-cov >= 3.0.0
+pytest-html >= 3.1.1
+pytest-rerunfailures >= 10.2
+
+## For calculating code coverage ##
+codecov >= 2.1.12
+coveralls >= 3.3.1
+
+## For some Python dependencies for testing code ##
+kafka-python >= 2.0.2
+pika >= 1.2.1
+stomp.py >= 8.0.1
+aiohttp >= 3.8.1
+urllib3 >= 1.26.8
+requests >= 2.27.1
+beautifulsoup4 >= 4.10.0
+mysql-connector-python >= 8.0.28
